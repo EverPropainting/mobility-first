@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-title" content="Mobility First">
+<title>Mobility First</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#1e293b; --card2:#273449; --line:#334155;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#2dd4bf;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --purple:#a78bfa;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
+  .wrap{max-width:520px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:4px 0 2px} h2{font-size:17px;margin:18px 0 8px}
+  h3{font-size:15px;margin:0 0 4px} .muted{color:var(--muted)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+  .row{display:flex;align-items:center;gap:10px}
+  .between{justify-content:space-between}
+  .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--card2);color:var(--muted)}
+  .pill.on{background:rgba(34,197,94,.15);color:var(--green)}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:11px;font-size:15px;font-weight:600}
+  .btn{background:var(--accent);color:#04283b;padding:13px 16px;width:100%}
+  .btn.big{padding:18px;font-size:18px;border-radius:16px}
+  .btn.ghost{background:var(--card2);color:var(--text)}
+  .btn.mini{width:auto;padding:8px 12px;font-size:13px}
+  .btn.green{background:var(--green);color:#052e14}
+  .btn.amber{background:var(--amber);color:#3a2a03}
+  input,textarea,select{font-family:inherit;font-size:16px;background:var(--card2);border:1px solid var(--line);
+    color:var(--text);border-radius:10px;padding:11px;width:100%}
+  textarea{min-height:70px;resize:vertical}
+  label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .ex{border-bottom:1px solid var(--line);padding:10px 0}
+  .ex:last-child{border-bottom:none}
+  .ex .tag{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+  .ex .w{font-size:13px;color:var(--accent2);font-weight:600}
+  .filler{opacity:.85}
+  .check{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);background:transparent;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:transparent;font-size:15px}
+  .check.on{background:var(--green);border-color:var(--green);color:#052e14}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#101d33;border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+  nav button{background:none;color:var(--muted);font-size:10px;display:flex;flex-direction:column;
+    align-items:center;gap:3px;width:20%;font-weight:600}
+  nav button .ic{font-size:20px}
+  nav button.on{color:var(--accent)}
+  .big-timer{font-size:56px;font-weight:800;text-align:center;letter-spacing:2px;margin:6px 0}
+  .clock{font-variant-numeric:tabular-nums}
+  .setrow{display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:8px;align-items:center;margin:6px 0}
+  .setrow .n{font-size:12px;color:var(--muted);text-align:center}
+  .streak{font-size:34px;font-weight:800;color:var(--amber)}
+  .bar{height:8px;background:var(--card2);border-radius:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:var(--accent2)}
+  .chip{display:inline-block;font-size:12px;padding:5px 10px;border-radius:999px;background:var(--card2);
+    margin:3px 4px 0 0;color:var(--muted)}
+  .chip.done{background:rgba(34,197,94,.15);color:var(--green);text-decoration:line-through}
+  .center{text-align:center}
+  .hidden{display:none}
+  svg{display:block;width:100%}
+  a{color:var(--accent)}
+  .quote{font-size:13px;font-style:italic;color:var(--muted);border-left:3px solid var(--accent2);padding-left:10px;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<nav>
+  <button data-tab="today" class="on"><span class="ic">🏠</span>Today</button>
+  <button data-tab="plan"><span class="ic">📋</span>Plan</button>
+  <button data-tab="track"><span class="ic">📈</span>Track</button>
+  <button data-tab="time"><span class="ic">⏳</span>My Time</button>
+</nav>
+
+<script>
+/* ============ DATA MODEL (localStorage) ============ */
+const DB = {
+  get(k,d){ try{return JSON.parse(localStorage.getItem('mf_'+k)) ?? d}catch(e){return d} },
+  set(k,v){ localStorage.setItem('mf_'+k, JSON.stringify(v)) }
+};
+const todayKey = ()=> new Date().toISOString().slice(0,10);
+const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+/* ============ THE PLAN (from Mobility-First 5-Day Strength Plan) ============ */
+const PREP = { // back+ankle prep, every day
+  title:'Back + Ankle Prep (every day)',
+  items:[
+    {n:'Cat-cow', d:'8 slow reps', sec:40},
+    {n:'Half-kneeling hip flexor stretch', d:'30 sec/side', sec:60},
+    {n:'Ankle dorsiflexion rocks', d:'10/side', sec:40},
+    {n:'Glute bridges', d:'12 reps', sec:40},
+    {n:'Bodyweight hinge', d:'10 reps', sec:40},
+  ]
+};
+const QIGONG = {
+  1:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Wuji standing breath','4 breaths'],['Opening/closing hands','8 reps']],
+  2:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Cloud hands','8 each way'],['Knocking on the door','45 sec']],
+  3:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Spinal wave','6 reps'],['Figure-8 arm swings','8 each way']],
+  4:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Shaking the tree','45 sec'],['Scooping from the earth','8 reps']],
+  5:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Bear sways / weight shift','8 each way'],['Crane opens wings','8 reps']],
+};
+// s = strength (loggable), f = filler/timed, h = hold
+const DAYS = {
+  1:{ focus:'Lower Body + Ankles', time:'45–50 min',
+    strength:[
+      {t:'A1',n:'Goblet / Front Squat',w:'50 lb DB / 135 lb',sr:'3 × 8',type:'s',note:'Slow, ribs down, full foot.'},
+      {t:'A2',n:'Doorway pec stretch',w:'',sr:'30 sec/side',type:'f',sec:60},
+      {t:'B1',n:'DB Reverse Lunge',w:'25–35 lb DBs',sr:'3 × 8/leg',type:'s',note:'Step back, not up. Front shin vertical.'},
+      {t:'B2',n:'Thread-the-needle',w:'',sr:'6/side',type:'f',sec:45},
+      {t:'C1',n:'DB Romanian Deadlift',w:'50s',sr:'3 × 10',type:'s',note:'3-sec down, feel the hamstrings.'},
+      {t:'C2',n:'Figure-8 arm swings',w:'',sr:'6 each way',type:'f',sec:40},
+      {t:'D1',n:'Calf Raises',w:'BW–50s',sr:'3 × 15',type:'s',note:'Pause at top, 3-sec lower.'},
+      {t:'D2',n:'Tibialis Raises',w:'BW',sr:'3 × 20',type:'s',note:'Back to wall, toes to shins.'},
+    ],
+    cooldown:[
+      {n:'Couch stretch',d:'75–90 sec/side',sec:90},
+      {n:'Calf stretch on plate/wall',d:'60 sec/side',sec:60},
+      {n:'Figure-four stretch',d:'60 sec/side',sec:60},
+      {n:"Child's pose breathing",d:'60–90 sec',sec:75},
+    ]},
+  2:{ focus:'Upper Push + Hip Mobility', time:'45–50 min',
+    strength:[
+      {t:'A1',n:'Bench Press',w:'205 lb',sr:'3 × 8–10',type:'s',note:'Clean reps, stop 1–2 before failure.'},
+      {t:'A2',n:'Half-kneeling hip flexor stretch',w:'',sr:'30 sec/side',type:'f',sec:60},
+      {t:'B1',n:'Incline DB Press',w:'45s',sr:'3 × 8–10',type:'s',note:'Start 40s if shoulder is cranky.'},
+      {t:'B2',n:'90/90 hip switches',w:'',sr:'6/side',type:'f',sec:45},
+      {t:'C1',n:'Seated Shoulder Press',w:'35s–40s',sr:'3 × 8–10',type:'s',note:'Seated protects the back.'},
+      {t:'C2',n:'Deep squat hold on rack',w:'',sr:'30 sec',type:'f',sec:30},
+      {t:'D1',n:'Triceps Pressdown',w:'60–80 lb',sr:'2 × 12',type:'s',note:'Elbows pinned.'},
+      {t:'D2',n:'Dead Bug',w:'BW',sr:'2 × 8/side',type:'s',note:'Low back glued to floor.'},
+    ],
+    cooldown:[
+      {n:'Doorway pec stretch',d:'60–75 sec/side',sec:75},
+      {n:'Lat stretch on rack',d:'60 sec/side',sec:60},
+      {n:'Thoracic open-book rotations',d:'8/side',sec:60},
+      {n:"Child's pose breathing",d:'60 sec',sec:60},
+    ]},
+  3:{ focus:'Flow Day: Peloton + Core + Long Mobility', time:'45 min', flow:true,
+    strength:[
+      {t:'RIDE',n:'Moderate Peloton ride',w:'',sr:'20 min',type:'f',sec:1200,note:'Conversational pace.'},
+      {t:'C',n:'Bird Dog',w:'',sr:'8/side × 2 rounds',type:'s',note:'Pause 2 sec, hips level.'},
+      {t:'C',n:'Side Plank',w:'',sr:'20–30 sec/side × 2',type:'f',sec:30},
+      {t:'C',n:'Glute Bridge March',w:'',sr:'10/side × 2',type:'s',note:'Hips level, no rocking.'},
+      {t:'C',n:'Single-Leg Balance',w:'',sr:'30 sec/side × 2',type:'f',sec:30,note:'Direct ankle training.'},
+    ],
+    cooldown:[
+      {n:'Spinal waves + cat-cow',d:'8 of each',sec:60},
+      {n:'90/90 hip switches → hold',d:'8/side, then 60 sec/side',sec:120},
+      {n:'Couch stretch',d:'90 sec/side',sec:90},
+      {n:'Hamstring stretch (strap/rack)',d:'75 sec/side',sec:75},
+      {n:'Deep squat hold on rack',d:'90 sec total',sec:90},
+      {n:'Thoracic open-book rotations',d:'8/side',sec:60},
+      {n:'Feet-elevated breathing',d:'2–3 min · in 4 / out 8',sec:150},
+    ]},
+  4:{ focus:'Deadlift + Posterior Chain', time:'45–50 min',
+    strength:[
+      {t:'A',n:'Deadlift',w:'225 lb',sr:'4 × 5',type:'s',note:'No grinding. Full 2–3 min rest, relaxed breathing.'},
+      {t:'B1',n:'Barbell Romanian Deadlift',w:'155 lb',sr:'3 × 8',type:'s',note:'Neutral spine, loaded hamstring stretch.'},
+      {t:'B2',n:'Doorway pec stretch',w:'',sr:'30 sec/side',type:'f',sec:60},
+      {t:'C1',n:'Bulgarian Split Squat',w:'25–35 lb DBs',sr:'3 × 8/leg',type:'s',note:'BW-only first week to find stance.'},
+      {t:'C2',n:'Thread-the-needle',w:'',sr:'6/side',type:'f',sec:45},
+      {t:'D1',n:'Barbell Hip Thrust',w:'135–185 lb',sr:'3 × 10',type:'s',note:'Full glute squeeze, chin tucked.'},
+      {t:'D2',n:'Face Pull',w:'40–70 lb',sr:'3 × 12–15',type:'s',note:'Light and strict.'},
+      {t:'E',n:'Farmer Carry',w:'50s',sr:'3 × 30–45 sec',type:'f',sec:45,note:'Tall posture.'},
+    ],
+    cooldown:[
+      {n:'Couch stretch',d:'75–90 sec/side',sec:90},
+      {n:'Hamstring stretch',d:'60 sec/side',sec:60},
+      {n:'Figure-four stretch',d:'60 sec/side',sec:60},
+      {n:"Child's pose breathing",d:'90 sec',sec:90},
+    ]},
+  5:{ focus:'Upper Pull + Hip/Ankle Mobility', time:'45–50 min',
+    strength:[
+      {t:'A1',n:'Lat Pulldown',w:'130–150 lb',sr:'3 × 8–12',type:'s',note:'Pull elbows down, not just hands.'},
+      {t:'A2',n:'Half-kneeling hip flexor stretch',w:'',sr:'30 sec/side',type:'f',sec:60},
+      {t:'B1',n:'1-Arm DB Row',w:'50 lb',sr:'3 × 10/side',type:'s',note:'Back tight, no jerking.'},
+      {t:'B2',n:'Deep squat hold on rack',w:'',sr:'30 sec',type:'f',sec:30},
+      {t:'C1',n:'Rear Delt Fly',w:'15–25 lb DBs',sr:'3 × 12–15',type:'s',note:'Strict and controlled.'},
+      {t:'C2',n:'Ankle dorsiflexion rocks',w:'',sr:'10/side',type:'f',sec:40},
+      {t:'D1',n:'DB Curl',w:'25s–30s',sr:'2 × 10–12',type:'s',note:'No swinging.'},
+      {t:'D2',n:'Suitcase Carry',w:'50 lb',sr:'2 × 30–45 sec/side',type:'f',sec:45},
+    ],
+    cooldown:[
+      {n:'Lat stretch on rack',d:'60–75 sec/side',sec:75},
+      {n:'Thoracic rotations',d:'8/side',sec:60},
+      {n:'Hamstring stretch',d:'60 sec/side',sec:60},
+      {n:'Calf stretch',d:'60 sec/side',sec:60},
+    ]},
+};
+const EVENING = [
+  {n:'Couch stretch',d:'90 sec/side',sec:90},
+  {n:'90/90 hip switches → hold',d:'6/side, then 45 sec/side',sec:90},
+  {n:'Hamstring stretch (strap/towel)',d:'60 sec/side',sec:60},
+  {n:'Deep squat hold',d:'60 sec',sec:60},
+  {n:'Thoracic open-book rotations',d:'8/side',sec:60},
+  {n:'Calf stretch on stair/wall',d:'60 sec/side',sec:60},
+  {n:'Legs up the wall + breathing',d:'2 min · in 4 / out 8',sec:120},
+];
+const STARTING = [
+  ['Bench Press','205 lb','3 × 8–10'],['Deadlift','225 lb','4 × 5'],
+  ['Goblet / Front Squat','50 lb DB / 135 lb','3 × 8'],['Barbell RDL','155 lb','3 × 8'],
+  ['Incline DB Press','45s','3 × 8–10'],['Seated Shoulder Press','35–40s','3 × 8–10'],
+  ['Lat Pulldown / Row','130–150 lb','3 × 8–12'],['Farmer / Suitcase Carry','50s','30–45 sec'],
+];
+// exercise libraries (deduped) for freelance / swap
+const LIBRARY = (()=>{const seen={},arr=[];
+  for(let d=1;d<=5;d++)DAYS[d].strength.forEach(ex=>{if(!seen[ex.n]){seen[ex.n]=1;arr.push(ex)}});
+  return arr;})();
+const COOLDOWN_LIB = (()=>{const seen={},arr=[];
+  for(let d=1;d<=5;d++)DAYS[d].cooldown.forEach(cd=>{if(!seen[cd.n]){seen[cd.n]=1;arr.push(cd)}});
+  EVENING.forEach(e=>{if(!seen[e.n]){seen[e.n]=1;arr.push(e)}});
+  return arr;})();
+
+/* ============ HELPERS ============ */
+const $ = s=>document.querySelector(s);
+const app = $('#app');
+function fmt(sec){const m=Math.floor(sec/60),s=sec%60;return m+':'+String(s).padStart(2,'0')}
+function setsFor(sr){ const m=sr.match(/(\d+)\s*×/); return m?parseInt(m[1]):3 }
+
+/* completion + streak */
+function comp(){ return DB.get('completion',{}) }
+function markDone(kind,val){
+  const c=comp(); const d=todayKey(); c[d]=c[d]||{};
+  c[d][kind]= val!==undefined?val:!c[d][kind]; DB.set('completion',c); return c[d][kind];
+}
+function eveningStreak(){
+  const c=comp(); let s=0; let dt=new Date();
+  for(let i=0;i<400;i++){ const k=dt.toISOString().slice(0,10);
+    if(c[k]&&c[k].evening){s++; dt.setDate(dt.getDate()-1)} else break }
+  return s;
+}
+
+/* ============ ROUTER ============ */
+let TAB='today';
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  TAB=b.dataset.tab;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  render();
+});
+function render(){ ({today:renderToday,plan:renderPlan,track:renderTrack,time:renderTime}[TAB])() }
+
+/* ============ TODAY ============ */
+function renderToday(){
+  const dow=new Date().getDay(); const d=todayKey(); const c=comp()[d]||{};
+  const isTrain = DAYS[dow];
+  let h=`<h1>Today</h1><p class="sub">${dayName[dow]} · ${new Date().toLocaleDateString()}</p>`;
+
+  // one aligned action (Master Your Time)
+  const act=DB.get('todayAction',{});
+  h+=`<div class="card" style="border-color:var(--purple)">
+    <div class="row between"><h3>⏳ One aligned action</h3><span class="pill">Master Your Time</span></div>
+    <input id="oneAction" placeholder="The single most important thing today…" value="${act.date===d?(act.text||''):''}">
+    <div style="height:8px"></div>
+    <button class="btn ghost mini" onclick="saveAction()">Save</button></div>`;
+
+  if(isTrain){
+    const S=DAYS[dow];
+    h+=`<div class="card">
+      <div class="row between"><span class="pill">${S.time}</span>
+        ${c.workout?'<span class="pill on">✓ Done</span>':''}</div>
+      <h2 style="margin-top:8px">${dayName[dow]} — ${S.focus}</h2>
+      <p class="muted" style="font-size:13px">Warm-up → strength + mobility → cooldown. The clock keeps you in the box.</p>
+      <button class="btn big green" onclick="startWorkout()">▶ Start Workout</button>
+      <div class="grid3" style="margin-top:8px">
+        <button class="btn ghost mini" onclick="chooseDay()">Another day</button>
+        <button class="btn ghost mini" onclick="openFreelance()">Build my own</button>
+        <button class="btn ghost mini" onclick="startRecovery()">Sore? Mobility</button>
+      </div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Not feeling today's? Swap in another day, build your own, or do a mobility-only recovery — each still starts with your warm-up.</p>
+    </div>`;
+  } else {
+    h+=`<div class="card"><h2>${dayName[dow]} — Rest day</h2>
+      <p class="muted" style="font-size:13px">Walk or easy ride, and the evening reset still happens — or train if you feel like it.</p>
+      <button class="btn big green" onclick="startRecovery()">▶ Mobility / Recovery</button>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn ghost mini" onclick="chooseDay()">Do a day's workout</button>
+        <button class="btn ghost mini" onclick="openFreelance()">Build my own</button>
+      </div></div>`;
+  }
+
+  // daily checkboxes
+  h+=`<div class="card"><h3>Daily anchors</h3>`;
+  h+=chk('warmup','Morning warm-up (qigong + prep)',c.warmup);
+  if(isTrain) h+=chk('workout','Workout complete',c.workout);
+  h+=chk('evening','10-min evening reset',c.evening);
+  h+=`<div class="row between" style="margin-top:10px">
+      <span class="muted" style="font-size:13px">🔥 Evening reset streak</span>
+      <span class="streak">${eveningStreak()}</span></div>`;
+  h+=`<button class="btn ghost mini" style="margin-top:8px" onclick="TAB='plan';goEvening()">Do the evening reset →</button></div>`;
+
+  // sleep
+  h+=sleepCard();
+
+  // quick weight + feel
+  const w=DB.get('weight',[]); const last=w[w.length-1];
+  h+=`<div class="card"><h3>Quick log</h3>
+    <div class="grid2">
+      <div><label>Bodyweight (lb)</label><input id="qw" type="number" inputmode="decimal" placeholder="${last?last.weight:'—'}"></div>
+      <div><label>How do you feel? (1–5)</label><input id="qf" type="number" min="1" max="5" inputmode="numeric" placeholder="1–5"></div>
+    </div>
+    <label>Back / ankle / energy notes</label>
+    <textarea id="qn" placeholder="Loose? Stiff? Any tweak spots?"></textarea>
+    <div style="height:8px"></div>
+    <button class="btn mini" onclick="quickLog()">Save log</button></div>`;
+
+  app.innerHTML=h;
+}
+function chk(kind,label,on){
+  return `<div class="row" style="padding:8px 0" onclick="toggle('${kind}')">
+    <div class="check ${on?'on':''}">✓</div><div>${label}</div></div>`;
+}
+window.toggle=k=>{markDone(k);render()};
+window.saveAction=()=>{DB.set('todayAction',{date:todayKey(),text:$('#oneAction').value});toast('Saved')};
+window.quickLog=()=>{
+  const wv=$('#qw').value, fv=$('#qf').value, nv=$('#qn').value;
+  if(wv){const a=DB.get('weight',[]);a.push({date:todayKey(),weight:parseFloat(wv)});DB.set('weight',a)}
+  if(fv||nv){const n=DB.get('notes',{});n[todayKey()]={feel:fv,text:nv};DB.set('notes',n)}
+  toast('Logged'); render();
+};
+
+/* ============ SLEEP TRACKER ============ */
+function tclock(iso){const d=new Date(iso);let h=d.getHours();const m=d.getMinutes();
+  const ap=h<12?'AM':'PM';h=h%12||12;return h+':'+String(m).padStart(2,'0')+ap}
+function sleepCard(){
+  const sa=DB.get('sleepActive',null); const log=DB.get('sleep',[]); const last=log[log.length-1];
+  if(sa){ const hrs=(Date.now()-new Date(sa.start))/3600000;
+    return `<div class="card" style="border-color:var(--purple)">
+      <div class="row between"><h3>😴 Sleeping…</h3><span class="pill">since ${tclock(sa.start)}</span></div>
+      <div class="big-timer">${hrs.toFixed(1)}<span style="font-size:20px"> h</span></div>
+      <button class="btn big" onclick="endSleep()">⏹ End Sleep</button></div>`; }
+  return `<div class="card"><div class="row between"><h3>😴 Sleep</h3>
+    ${last?`<span class="muted" style="font-size:13px">last night: ${last.hours.toFixed(1)} h</span>`:''}</div>
+    <button class="btn big" onclick="startSleep()">🌙 Start Sleep</button>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Tap at bedtime, End Sleep when you wake. Patterns vs how you feel show in Track.</p></div>`;
+}
+window.startSleep=()=>{DB.set('sleepActive',{start:new Date().toISOString()});toast('Good night 🌙');render()};
+window.endSleep=()=>{const sa=DB.get('sleepActive',null);if(!sa)return;
+  const end=new Date(),start=new Date(sa.start),hours=Math.max(0,(end-start)/3600000);
+  const log=DB.get('sleep',[]);log.push({date:end.toISOString().slice(0,10),start:sa.start,end:end.toISOString(),hours});
+  DB.set('sleep',log);DB.set('sleepActive',null);toast('Slept '+hours.toFixed(1)+' h');render()};
+window.addSleepManual=()=>{const s=$('#slS').value,e=$('#slE').value;
+  if(!s||!e){alert('Pick both a bed and wake time.');return}
+  const start=new Date(s),end=new Date(e),hours=Math.max(0,(end-start)/3600000);
+  if(hours<=0||hours>24){alert('Check the times — wake should be after bedtime.');return}
+  const log=DB.get('sleep',[]);log.push({date:end.toISOString().slice(0,10),start:start.toISOString(),end:end.toISOString(),hours});
+  log.sort((a,b)=> a.end<b.end?-1:1);DB.set('sleep',log);toast('Sleep added');render()};
+
+/* ============ START WORKOUT (guided) ============ */
+let W=null; // active session
+let FL={s:{},c:{}}; // freelance selections
+// mobility warm-up ALWAYS comes first, for every session type
+function warmupSteps(qday, includeSpin){
+  const q=QIGONG[qday]||QIGONG[1];
+  const steps=[{phase:'Warm-up',type:'info',n:'Qigong loosen-up',d:q.map(x=>x[0]+' — '+x[1]).join(' · ')}];
+  PREP.items.forEach(it=>steps.push({phase:'Warm-up',type:'timed',n:it.n,d:it.d,sec:it.sec}));
+  if(includeSpin) steps.push({phase:'Warm-up',type:'timed',n:'Easy Peloton spin',d:'5 min',sec:300});
+  return steps;
+}
+function buildSteps(dow){
+  const S=DAYS[dow]; let steps=warmupSteps(dow,!S.flow);
+  S.strength.forEach(ex=>{
+    if(ex.type==='s') steps.push({phase:'Strength',type:'strength',ex});
+    else steps.push({phase:S.flow?'Circuit':'Strength',type:'timed',n:ex.n,d:ex.sr,sec:ex.sec||45,note:ex.note});
+  });
+  S.cooldown.forEach(cd=>steps.push({phase:'Cooldown',type:'timed',n:cd.n,d:cd.d,sec:cd.sec}));
+  return steps;
+}
+function launch(cfg){
+  W=Object.assign({i:0,start:Date.now(),tmp:{}},cfg);
+  drawStep();
+  clearInterval(W.clockInt);
+  W.clockInt=setInterval(()=>{const el=$('#sessClock');if(el)el.textContent=fmt(Math.floor((Date.now()-W.start)/1000))},1000);
+}
+window.startWorkout=(dow)=>{
+  dow=(dow==null)?new Date().getDay():dow;
+  if(!DAYS[dow])return chooseDay();
+  launch({dow,steps:buildSteps(dow),focus:DAYS[dow].focus,timeBox:DAYS[dow].time});
+};
+window.startRecovery=()=>{ // sore day: warm-up + long mobility, no lifting
+  const dow=new Date().getDay(), q=(dow>=1&&dow<=5)?dow:1;
+  let steps=warmupSteps(q,false);
+  DAYS[3].cooldown.forEach(cd=>steps.push({phase:'Mobility',type:'timed',n:cd.n,d:cd.d,sec:cd.sec}));
+  launch({dow,steps,focus:'Mobility / Recovery',timeBox:'20–25 min'});
+};
+window.chooseDay=()=>{
+  let h=`<div class="row between"><button class="btn ghost mini" onclick="render()">← Back</button><span class="pill">Pick a session</span></div>
+    <h1 style="margin-top:10px">Choose a workout</h1>
+    <p class="sub">Missed a day or want a different focus? Pick any session — it always starts with your mobility warm-up.</p>`;
+  for(let d=1;d<=5;d++){h+=`<div class="card" onclick="startWorkout(${d})"><div class="row between">
+    <div><h3>${dayName[d]}</h3><span class="muted" style="font-size:13px">${DAYS[d].focus}</span></div>
+    <span class="pill">${DAYS[d].time}</span></div></div>`;}
+  h+=`<div class="card" onclick="startRecovery()" style="border-color:var(--accent2)"><div class="row between">
+    <div><h3>🧘 Sore? Mobility / Recovery</h3><span class="muted" style="font-size:13px">Warm-up + long mobility flow, no lifting</span></div>
+    <span class="pill">20–25 min</span></div></div>`;
+  app.innerHTML=h;
+};
+window.openFreelance=()=>{
+  let h=`<div class="row between"><button class="btn ghost mini" onclick="render()">← Back</button><span class="pill">Build your own</span></div>
+    <h1 style="margin-top:10px">Freelance workout</h1>
+    <p class="sub">Pick what you feel like — your mobility warm-up is added automatically at the start.</p>
+    <div class="card"><h3>💪 Strength & main</h3>`;
+  LIBRARY.forEach((ex,i)=>{h+=`<div class="row" style="padding:8px 0" onclick="flTog('s',${i})">
+    <div class="check ${FL.s[ex.n]?'on':''}">✓</div>
+    <div><div>${ex.n}</div><div class="muted" style="font-size:12px">${ex.w?ex.w+' · ':''}${ex.sr}</div></div></div>`});
+  h+=`</div><div class="card"><h3>🧘 Mobility & cooldown</h3>`;
+  COOLDOWN_LIB.forEach((cd,i)=>{h+=`<div class="row" style="padding:8px 0" onclick="flTog('c',${i})">
+    <div class="check ${FL.c[cd.n]?'on':''}">✓</div>
+    <div><div>${cd.n}</div><div class="muted" style="font-size:12px">${cd.d}</div></div></div>`});
+  h+=`</div><button class="btn big green" onclick="startFreelance()">▶ Start (warm-up first)</button>`;
+  app.innerHTML=h;
+};
+window.flTog=(grp,i)=>{const name=(grp==='s'?LIBRARY:COOLDOWN_LIB)[i].n;
+  const store=grp==='s'?FL.s:FL.c; store[name]=!store[name]; openFreelance();};
+window.startFreelance=()=>{
+  const dow=new Date().getDay(), q=(dow>=1&&dow<=5)?dow:1;
+  let steps=warmupSteps(q,false), cnt=0;
+  LIBRARY.forEach(ex=>{ if(FL.s[ex.n]){cnt++;
+    if(ex.type==='s')steps.push({phase:'Strength',type:'strength',ex});
+    else steps.push({phase:'Strength',type:'timed',n:ex.n,d:ex.sr,sec:ex.sec||45,note:ex.note});}});
+  COOLDOWN_LIB.forEach(cd=>{ if(FL.c[cd.n]){cnt++;steps.push({phase:'Cooldown',type:'timed',n:cd.n,d:cd.d,sec:cd.sec})}});
+  if(!cnt){alert('Pick at least one exercise.');return}
+  launch({dow,steps,focus:'Freelance',timeBox:'your call'});
+};
+function drawStep(){
+  const s=W.steps[W.i]; const foc=W.focus||(DAYS[W.dow]&&DAYS[W.dow].focus)||'Workout';
+  const prog=Math.round((W.i)/W.steps.length*100);
+  let h=`<div class="row between"><button class="btn ghost mini" onclick="quitWorkout()">✕ Quit</button>
+     <span class="pill">${foc}</span>
+     <span class="pill clock" id="sessClock">0:00</span></div>
+     <div class="bar" style="margin:12px 0"><i style="width:${prog}%"></i></div>
+     <p class="muted center" style="font-size:12px">${s.phase} · step ${W.i+1} of ${W.steps.length}</p>`;
+
+  if(s.type==='info'){
+    h+=`<div class="card center"><h2>${s.n}</h2><p class="muted">${s.d}</p>
+      <p class="quote">Stay relaxed and breathe — wake the body up, don't fatigue it.</p></div>`;
+    h+=nextBtn('Begin prep →');
+  }
+  else if(s.type==='timed'){
+    h+=`<div class="card center"><h2>${s.n}</h2><p class="w">${s.d}</p>
+      ${s.note?`<p class="muted" style="font-size:13px">${s.note}</p>`:''}
+      <div class="big-timer clock" id="cdT">${fmt(s.sec)}</div>
+      <div class="grid2">
+        <button class="btn amber" id="cdBtn" onclick="toggleTimer()">Start timer</button>
+        <button class="btn ghost" onclick="addTime(15)">+15s</button>
+      </div></div>`;
+    h+=nextBtn(W.i===W.steps.length-1?'Finish ✓':'Next →');
+  }
+  else if(s.type==='strength'){
+    const ex=s.ex; const nSets=setsFor(ex.sr);
+    const prev=lastLoggedWeight(ex.n);
+    W.tmp=W.tmp||{};
+    const key=ex.n;
+    if(!W.tmp[key]) W.tmp[key]=Array.from({length:nSets},()=>({w:prev||'',r:''}));
+    h+=`<div class="card"><span class="tag">${ex.t}</span><h2 style="margin:2px 0">${ex.n}</h2>
+      <p class="w">${ex.w?ex.w+' · ':''}${ex.sr}</p>
+      ${ex.note?`<p class="muted" style="font-size:13px">${ex.note}</p>`:''}
+      ${prev?`<p class="muted" style="font-size:12px">Last time: ${prev} lb</p>`:''}
+      <div class="setrow"><span class="n">Set</span><span class="n">Weight (lb)</span><span class="n">Reps</span><span class="n">✓</span></div>`;
+    W.tmp[key].forEach((st,idx)=>{
+      h+=`<div class="setrow"><span class="n">${idx+1}</span>
+        <input type="number" inputmode="decimal" value="${st.w}" onchange="setVal('${key}',${idx},'w',this.value)" placeholder="${prev||''}">
+        <input type="number" inputmode="numeric" value="${st.r}" onchange="setVal('${key}',${idx},'r',this.value)" placeholder="reps">
+        <div class="check ${st.done?'on':''}" onclick="setDone('${key}',${idx})">✓</div></div>`;
+    });
+    h+=`<div style="height:6px"></div>
+       <button class="btn amber mini" onclick="restTimer(90)">Rest timer 90s</button>
+       <span id="restLbl" class="muted" style="font-size:13px;margin-left:8px"></span></div>`;
+    h+=nextBtn(W.i===W.steps.length-1?'Finish ✓':'Next →');
+  }
+  app.innerHTML=h;
+}
+function nextBtn(t){return `<button class="btn big" onclick="nextStep()">${t}</button>`}
+window.setVal=(k,i,f,v)=>{W.tmp[k][i][f]=v};
+window.setDone=(k,i)=>{W.tmp[k][i].done=!W.tmp[k][i].done;drawStep()};
+window.addTime=s=>{const el=$('#cdT');if(!el)return;W.rem=(W.rem??timerSec())+s;el.textContent=fmt(W.rem)};
+function timerSec(){return W.steps[W.i].sec}
+window.toggleTimer=()=>{
+  const btn=$('#cdBtn'),el=$('#cdT');
+  if(W.tInt){clearInterval(W.tInt);W.tInt=null;btn.textContent='Resume';return}
+  if(W.rem==null)W.rem=timerSec();
+  btn.textContent='Pause';
+  W.tInt=setInterval(()=>{
+    W.rem--; el.textContent=fmt(Math.max(0,W.rem));
+    if(W.rem<=0){clearInterval(W.tInt);W.tInt=null;btn.textContent='Done ✓';beep();navigator.vibrate&&navigator.vibrate(400)}
+  },1000);
+};
+window.restTimer=s=>{
+  const lbl=$('#restLbl'); let r=s;
+  if(W.rInt)clearInterval(W.rInt);
+  W.rInt=setInterval(()=>{r--;lbl.textContent='Rest: '+fmt(Math.max(0,r));
+    if(r<=0){clearInterval(W.rInt);lbl.textContent='Rest done ✓';beep();navigator.vibrate&&navigator.vibrate(300)}},1000);
+};
+window.nextStep=()=>{
+  if(W.tInt){clearInterval(W.tInt);W.tInt=null}
+  W.rem=null;
+  if(W.i<W.steps.length-1){W.i++;drawStep()} else finishWorkout();
+};
+window.quitWorkout=()=>{ if(confirm('Quit workout? Logged sets won\'t be saved.')){cleanup();TAB='today';render()} };
+function cleanup(){clearInterval(W&&W.clockInt);clearInterval(W&&W.tInt);clearInterval(W&&W.rInt);W=null}
+function finishWorkout(){
+  const dur=Math.floor((Date.now()-W.start)/1000);
+  const exs=[];
+  Object.keys(W.tmp||{}).forEach(k=>{
+    const sets=W.tmp[k].filter(s=>s.w||s.r).map(s=>({w:s.w,r:s.r}));
+    if(sets.length) exs.push({name:k,sets});
+  });
+  const logs=DB.get('workouts',[]);
+  const focus=W.focus||(DAYS[W.dow]&&DAYS[W.dow].focus)||'Workout';
+  logs.push({date:todayKey(),dow:W.dow,focus,durationSec:dur,exercises:exs});
+  DB.set('workouts',logs);
+  markDone('workout',true); markDone('warmup',true);
+  const box=W.timeBox||(DAYS[W.dow]&&DAYS[W.dow].time)||'';
+  cleanup(); TAB='today';
+  app.innerHTML=`<div class="card center"><h1>💪 Done!</h1>
+    <p class="muted">${dayName[new Date().getDay()]} — ${logs[logs.length-1].focus}</p>
+    <div class="big-timer">${fmt(dur)}</div>
+    <p class="muted">Session time (target ${box}). Nice work staying in the box.</p>
+    <button class="btn" onclick="render()">Back to Today</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" onclick="TAB='track';render()">See progress →</button></div>`;
+}
+function lastLoggedWeight(name){
+  const logs=DB.get('workouts',[]);
+  for(let i=logs.length-1;i>=0;i--){const e=(logs[i].exercises||[]).find(x=>x.name===name);
+    if(e&&e.sets.length){const ws=e.sets.map(s=>parseFloat(s.w)).filter(x=>x);if(ws.length)return Math.max(...ws)}}
+  return null;
+}
+function beep(){try{const a=new(AudioContext||webkitAudioContext)();const o=a.createOscillator();
+  o.connect(a.destination);o.frequency.value=880;o.start();setTimeout(()=>o.stop(),200)}catch(e){}}
+
+/* ============ PLAN ============ */
+function renderPlan(){
+  let h=`<h1>The Plan</h1><p class="sub">Mobility-First 5-Day Strength · morning basement</p>`;
+  h+=`<div class="card"><div class="grid2">
+      <button class="btn ghost mini" onclick="scrollTo(0,0)">Weekly</button>
+      <button class="btn ghost mini" onclick="goEvening()">Evening reset</button></div></div>`;
+  for(let dw=1;dw<=5;dw++){
+    const S=DAYS[dw];
+    h+=`<div class="card"><div class="row between">
+        <h2 style="margin:0">${dayName[dw]}</h2><span class="pill">${S.time}</span></div>
+      <p class="muted" style="font-size:13px;margin:2px 0 8px">${S.focus}</p>`;
+    S.strength.forEach(ex=>{
+      h+=`<div class="ex ${ex.type==='f'?'filler':''}">
+        <div class="row between"><div><span class="tag">${ex.t}</span> ${ex.n}</div>
+        <div class="w">${ex.w||''}</div></div>
+        <div class="muted" style="font-size:12px">${ex.sr}${ex.note?' · '+ex.note:''}</div></div>`;
+    });
+    h+=`<h3 style="margin-top:10px">Cooldown</h3>`;
+    S.cooldown.forEach(cd=>h+=`<div class="ex"><div class="row between"><div>${cd.n}</div><div class="w">${cd.d}</div></div></div>`);
+    h+=`</div>`;
+  }
+  // evening
+  h+=`<div class="card" id="evening"><h2>🌙 10-Minute Evening Reset — every day</h2>
+    <p class="muted" style="font-size:13px">Frequency beats intensity. Floor, no gear, even on rest days.</p>`;
+  EVENING.forEach(e=>h+=`<div class="ex"><div class="row between"><div>${e.n}</div><div class="w">${e.d}</div></div></div>`);
+  const doneTonight=(comp()[todayKey()]||{}).evening;
+  h+=`<button class="btn ${doneTonight?'ghost':'green'}" style="margin-top:10px" onclick="markDone('evening',true);toast('Evening reset ✓');render()">
+      ${doneTonight?'✓ Done tonight':'Mark done tonight'}</button></div>`;
+  // starting weights
+  h+=`<div class="card"><h2>Starting weights</h2>`;
+  STARTING.forEach(s=>h+=`<div class="ex"><div class="row between"><div>${s[0]}</div><div class="w">${s[1]} · ${s[2]}</div></div></div>`);
+  h+=`<p class="quote">Add reps first, then weight. RPE 7–8 — 1–3 reps in the tank. Deload every 4–6 weeks.</p></div>`;
+  app.innerHTML=h;
+}
+window.goEvening=()=>{TAB='plan';renderPlan();setTimeout(()=>{const e=$('#evening');e&&e.scrollIntoView({behavior:'smooth'})},60)};
+
+/* ============ TRACK ============ */
+function renderTrack(){
+  const w=DB.get('weight',[]), logs=DB.get('workouts',[]);
+  let h=`<h1>Track</h1><p class="sub">Weight, workouts & progress</p>`;
+  // weight chart
+  h+=`<div class="card"><div class="row between"><h3>Bodyweight</h3>
+    ${w.length?`<span class="w">${w[w.length-1].weight} lb</span>`:''}</div>`;
+  h+= w.length>1 ? lineChart(w.map(x=>x.weight)) : `<p class="muted" style="font-size:13px">Log your weight on the Today tab to see the trend.</p>`;
+  h+=`<div class="grid2" style="margin-top:8px">
+      <div><input id="tw" type="number" inputmode="decimal" placeholder="Weight (lb)"></div>
+      <button class="btn mini" onclick="addWeight()">Add</button></div></div>`;
+  // sleep
+  const sleep=DB.get('sleep',[]); const notes=DB.get('notes',{});
+  h+=`<div class="card"><div class="row between"><h3>😴 Sleep</h3>
+      ${sleep.length?`<span class="w">${sleep[sleep.length-1].hours.toFixed(1)} h</span>`:''}</div>`;
+  if(sleep.length>1) h+=lineChart(sleep.slice(-14).map(x=>+x.hours.toFixed(1)),'h');
+  else h+=`<p class="muted" style="font-size:13px">Use Start/End Sleep on the Today tab, or add a night manually below.</p>`;
+  if(sleep.length){const l7=sleep.slice(-7);const avg=l7.reduce((a,b)=>a+b.hours,0)/l7.length;
+    h+=`<p class="muted" style="font-size:13px">Recent average: <b style="color:var(--accent2)">${avg.toFixed(1)} h</b>/night</p>`}
+  // sleep vs feel pattern
+  const paired=sleep.filter(s=>notes[s.date]&&notes[s.date].feel).map(s=>({h:s.hours,feel:+notes[s.date].feel}));
+  if(paired.length>=4){
+    const avgF=a=>a.length?a.reduce((x,y)=>x+y.feel,0)/a.length:null;
+    const lo=avgF(paired.filter(p=>p.h<7)), hi=avgF(paired.filter(p=>p.h>=7));
+    if(lo!=null&&hi!=null) h+=`<p class="quote">Under 7h you rate feeling ~${lo.toFixed(1)}/5, vs ~${hi.toFixed(1)}/5 on 7h+.${hi>lo?' More sleep tracks with feeling better.':''}</p>`;
+  }
+  h+=`<div style="margin-top:4px">`;
+  sleep.slice(-8).reverse().forEach(s=>{const f=notes[s.date]&&notes[s.date].feel;
+    h+=`<div class="ex"><div class="row between"><div>${s.date} <span class="muted" style="font-size:12px">${s.start?tclock(s.start)+'–'+tclock(s.end):'from Health'}</span></div>
+      <div class="w">${s.hours.toFixed(1)}h${f?' · feel '+f+'/5':''}</div></div></div>`});
+  h+=`</div><label>Add a night manually</label>
+    <div class="grid2"><div><label>Bed</label><input id="slS" type="datetime-local"></div>
+    <div><label>Wake</label><input id="slE" type="datetime-local"></div></div>
+    <button class="btn mini" style="margin-top:8px" onclick="addSleepManual()">Add sleep</button>
+    <p class="muted" style="font-size:11px;margin-top:8px">🔮 Oura ring import can be added later — manual logs use the same format, so nothing's lost.</p></div>`;
+  // this week completion
+  h+=`<div class="card"><h3>This week</h3>${weekGrid()}</div>`;
+  // strength progress
+  h+=`<div class="card"><h3>Strength — latest vs first</h3>`;
+  const prog=strengthProgress(logs);
+  if(!prog.length) h+=`<p class="muted" style="font-size:13px">Log lifts in Start Workout to track progress.</p>`;
+  prog.forEach(p=>{
+    const up=p.latest>p.first;
+    h+=`<div class="ex"><div class="row between"><div>${p.name}</div>
+      <div class="w">${p.first} → ${p.latest} lb ${up?'▲':''}</div></div></div>`;
+  });
+  h+=`</div>`;
+  // history
+  h+=`<div class="card"><h3>Recent workouts</h3>`;
+  if(!logs.length) h+=`<p class="muted" style="font-size:13px">No sessions yet.</p>`;
+  logs.slice(-8).reverse().forEach(l=>{
+    h+=`<div class="ex"><div class="row between"><div>${l.date} · ${dayName[l.dow]}</div>
+      <div class="w">${fmt(l.durationSec)}</div></div>
+      <div class="muted" style="font-size:12px">${l.focus}</div></div>`;
+  });
+  h+=`</div>`;
+  app.innerHTML=h;
+}
+window.addWeight=()=>{const v=$('#tw').value;if(!v)return;const a=DB.get('weight',[]);
+  a.push({date:todayKey(),weight:parseFloat(v)});DB.set('weight',a);render()};
+function weekGrid(){
+  const c=comp(); let h='<div class="row" style="gap:6px;justify-content:space-between">';
+  const now=new Date(); const day=now.getDay();
+  for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(now.getDate()-i);const k=dt.toISOString().slice(0,10);
+    const cc=c[k]||{}; const did=cc.workout||cc.evening;
+    h+=`<div class="center" style="flex:1"><div class="muted" style="font-size:10px">${dayName[dt.getDay()][0]}</div>
+      <div class="check ${did?'on':''}" style="margin:4px auto 0">${did?'✓':''}</div></div>`;
+  }
+  return h+'</div>';
+}
+function strengthProgress(logs){
+  const first={},latest={};
+  logs.forEach(l=>(l.exercises||[]).forEach(e=>{
+    const ws=e.sets.map(s=>parseFloat(s.w)).filter(x=>x); if(!ws.length)return;
+    const mx=Math.max(...ws);
+    if(!(e.name in first))first[e.name]=mx; latest[e.name]=mx;
+  }));
+  return Object.keys(latest).map(n=>({name:n,first:first[n],latest:latest[n]}));
+}
+function lineChart(vals,unit){
+  unit=unit||'lb';
+  const w=480,h=120,pad=10;
+  const min=Math.min(...vals),max=Math.max(...vals),rng=(max-min)||1;
+  const pts=vals.map((v,i)=>{const x=pad+i*(w-2*pad)/(vals.length-1);
+    const y=h-pad-(v-min)/rng*(h-2*pad);return x+','+y}).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:120px">
+    <polyline fill="none" stroke="var(--accent2)" stroke-width="2.5" points="${pts}"/>
+    ${vals.map((v,i)=>{const x=pad+i*(w-2*pad)/(vals.length-1);const y=h-pad-(v-min)/rng*(h-2*pad);
+      return `<circle cx="${x}" cy="${y}" r="3" fill="var(--accent)"/>`}).join('')}
+  </svg><div class="row between"><span class="muted" style="font-size:11px">${min} ${unit}</span>
+    <span class="muted" style="font-size:11px">${max} ${unit}</span></div>`;
+}
+
+/* ============ MASTER YOUR TIME ============ */
+function renderTime(){
+  let h=`<h1>Master Your Time</h1>
+    <p class="sub">Design your life — a business doesn't. No sacrifice.</p>
+    <div class="card"><p class="quote">"The path to unimaginable success is creating sourceful intentions and living true to them." Set boundaries (≤40 hrs) and grow through skill + strategy, not more hours.</p></div>`;
+
+  // Step 1 — intentions
+  const ints=DB.get('intentions',[
+    {area:'Family (Maren & Julian)',intention:'',actions:''},
+    {area:'Business (EverPro)',intention:'',actions:''},
+    {area:'Health & body',intention:'Feel loose, limber, pain-free — strong.',actions:'Morning workout + evening reset daily.'},
+    {area:'Self / peace of mind',intention:'',actions:''},
+  ]);
+  h+=`<h2>1 · Intentions</h2><p class="muted" style="font-size:12px">What matters most in each part of life — and the actions that fulfill it.</p>`;
+  ints.forEach((it,i)=>{
+    h+=`<div class="card"><h3>${it.area}</h3>
+      <label>Intention</label><input value="${esc(it.intention)}" onchange="intVal(${i},'intention',this.value)">
+      <label>Aligned actions</label><input value="${esc(it.actions)}" onchange="intVal(${i},'actions',this.value)"></div>`;
+  });
+
+  // Step 2 — intentional calendar (time blocks)
+  const blocks=DB.get('timeblocks',[
+    {t:'5:30–6:15a',label:'Morning workout (protected)'},
+    {t:'6:15–6:45a',label:'Warm-up done · family breakfast'},
+    {t:'8:00a–4:00p',label:'EverPro — work block (boundary)'},
+    {t:'Evening',label:'10-min reset · family time'},
+  ]);
+  h+=`<h2>2 · Intentional calendar</h2><p class="muted" style="font-size:12px">Protect what matters with time-blocks — workout included.</p><div class="card">`;
+  blocks.forEach((b,i)=>{
+    h+=`<div class="setrow" style="grid-template-columns:1fr 2fr 34px">
+      <input value="${esc(b.t)}" onchange="blkVal(${i},'t',this.value)">
+      <input value="${esc(b.label)}" onchange="blkVal(${i},'label',this.value)">
+      <div class="check" onclick="delBlk(${i})" style="border-color:var(--red)">✕</div></div>`;
+  });
+  h+=`<button class="btn ghost mini" style="margin-top:8px" onclick="addBlk()">+ Add block</button></div>`;
+
+  // Step 3 — capture (write everything down)
+  const cap=DB.get('capture',[]);
+  h+=`<h2>3 · Capture everything</h2><p class="muted" style="font-size:12px">Get it out of your head — business or personal.</p><div class="card">
+    <div class="row"><input id="capIn" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addCap()">
+    <button class="btn mini" style="width:auto" onclick="addCap()">Add</button></div><div style="margin-top:8px">`;
+  if(!cap.length)h+=`<p class="muted" style="font-size:13px">Nothing captured yet.</p>`;
+  cap.forEach((c,i)=>h+=`<span class="chip ${c.done?'done':''}" onclick="toggleCap(${i})">${esc(c.text)}</span>`);
+  h+=`</div></div>`;
+
+  // Step 4 — manage your word
+  h+=`<h2>4 · Manage your word</h2>
+    <div class="card"><p class="muted" style="font-size:13px">Be a person of your word; raise the bar over time. Today's one aligned action lives on the Today tab.</p>
+    <button class="btn ghost mini" onclick="TAB='today';render()">Set today's action →</button></div>`;
+  app.innerHTML=h;
+}
+function esc(s){return (s||'').replace(/"/g,'&quot;')}
+window.intVal=(i,f,v)=>{const a=DB.get('intentions',[]);a[i]=a[i]||{};a[i][f]=v;
+  // ensure area preserved
+  const base=[{area:'Family (Maren & Julian)'},{area:'Business (EverPro)'},{area:'Health & body'},{area:'Self / peace of mind'}];
+  if(!a[i].area)a[i].area=base[i]?base[i].area:'Area';DB.set('intentions',a)};
+window.blkVal=(i,f,v)=>{const a=DB.get('timeblocks',[]);a[i][f]=v;DB.set('timeblocks',a)};
+window.addBlk=()=>{const a=DB.get('timeblocks',[]);a.push({t:'',label:''});DB.set('timeblocks',a);render()};
+window.delBlk=i=>{const a=DB.get('timeblocks',[]);a.splice(i,1);DB.set('timeblocks',a);render()};
+window.addCap=()=>{const v=$('#capIn').value.trim();if(!v)return;const a=DB.get('capture',[]);
+  a.push({text:v,done:false});DB.set('capture',a);render();setTimeout(()=>$('#capIn')&&$('#capIn').focus(),50)};
+window.toggleCap=i=>{const a=DB.get('capture',[]);a[i].done=!a[i].done;
+  if(a[i].done)setTimeout(()=>{},0);DB.set('capture',a);render()};
+
+/* ============ misc ============ */
+function toast(m){const t=document.createElement('div');t.textContent=m;
+  t.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#04283b;padding:10px 18px;border-radius:999px;font-weight:700;z-index:99';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),1400)}
+render();
+</script>
+</body>
+</html>
