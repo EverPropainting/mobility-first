@@ -830,4 +830,14 @@ window.addBlk=()=>{const a=DB.get('timeblocks',[]);a.push({t:'',label:''});DB.se
 window.delBlk=i=>{const a=DB.get('timeblocks',[]);a.splice(i,1);DB.set('timeblocks',a);render()};
 window.addCap=()=>{const v=$('#capIn').value.trim();if(!v)return;const a=DB.get('capture',[]);
   a.push({text:v,done:false});DB.set('capture',a);render();setTimeout(()=>$('#capIn')&&$('#capIn').focus(),50)};
-window.toggleCap=
+window.toggleCap=i=>{const a=DB.get('capture',[]);a[i].done=!a[i].done;
+  if(a[i].done)setTimeout(()=>{},0);DB.set('capture',a);render()};
+
+/* ============ misc ============ */
+function toast(m){const t=document.createElement('div');t.textContent=m;
+  t.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#04283b;padding:10px 18px;border-radius:999px;font-weight:700;z-index:99';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),1400)}
+render();
+</script>
+</body>
+</html>
