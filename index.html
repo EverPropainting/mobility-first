@@ -248,6 +248,9 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   render();
 });
 function render(){ ({today:renderToday,plan:renderPlan,track:renderTrack,time:renderTime}[TAB])() }
+// programmatic tab switch that also syncs the nav highlight
+function setTab(t){TAB=t;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));}
 
 /* ============ TODAY ============ */
 function renderToday(){
@@ -331,28 +334,116 @@ window.quickLog=()=>{
 /* ============ SLEEP TRACKER ============ */
 function tclock(iso){const d=new Date(iso);let h=d.getHours();const m=d.getMinutes();
   const ap=h<12?'AM':'PM';h=h%12||12;return h+':'+String(m).padStart(2,'0')+ap}
+const p2=n=>String(n).padStart(2,'0');
+// <input type="datetime-local"> value <-> Date, in LOCAL time
+function toInput(d){d=new Date(d);
+  return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}`}
+function fromInput(s){return new Date(s)}
+function shiftInput(s,mins){const d=fromInput(s);d.setMinutes(d.getMinutes()+mins);return toInput(d)}
+function inputHours(a,b){return (fromInput(b)-fromInput(a))/3600000}
+
+// SLEEP_EDIT = {mode:'end'|'edit'|'bed', idx, start, end}  (start/end are datetime-local strings)
+let SLEEP_EDIT=null;
+
 function sleepCard(){
+  if(SLEEP_EDIT) return sleepEditorCard();
   const sa=DB.get('sleepActive',null); const log=DB.get('sleep',[]); const last=log[log.length-1];
   if(sa){ const hrs=(Date.now()-new Date(sa.start))/3600000;
     return `<div class="card" style="border-color:var(--purple)">
       <div class="row between"><h3>😴 Sleeping…</h3><span class="pill">since ${tclock(sa.start)}</span></div>
       <div class="big-timer">${hrs.toFixed(1)}<span style="font-size:20px"> h</span></div>
-      <button class="btn big" onclick="endSleep()">⏹ End Sleep</button></div>`; }
+      <button class="btn big" onclick="endSleep()">⏹ End Sleep</button>
+      <button class="btn ghost mini" style="margin-top:8px" onclick="editBedtime()">✏️ Fix bedtime</button>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Woke up a while ago? Hit End Sleep — you can set the real wake time on the next screen.</p></div>`; }
   return `<div class="card"><div class="row between"><h3>😴 Sleep</h3>
     ${last?`<span class="muted" style="font-size:13px">last night: ${last.hours.toFixed(1)} h</span>`:''}</div>
     <button class="btn big" onclick="startSleep()">🌙 Start Sleep</button>
-    <p class="muted" style="font-size:12px;margin:8px 0 0">Tap at bedtime, End Sleep when you wake. Patterns vs how you feel show in Track.</p></div>`;
+    ${last?`<button class="btn ghost mini" style="margin-top:8px" onclick="editSleep(${log.length-1})">✏️ Edit last night (${tclock(last.start)}–${tclock(last.end)})</button>`:''}
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Tap at bedtime, End Sleep when you wake. Forgot to hit stop? Edit the times any time. Patterns vs how you feel show in Track.</p></div>`;
 }
+
+function sleepEditorCard(){
+  const E=SLEEP_EDIT, bedOnly = E.mode==='bed';
+  const hrs = bedOnly ? (Date.now()-fromInput(E.start))/3600000 : inputHours(E.start,E.end);
+  const bad = !(hrs>0 && hrs<=24);
+  const title = E.mode==='end' ? '😴 Log last night' : E.mode==='edit' ? '✏️ Edit sleep' : '✏️ Fix bedtime';
+  let h=`<div class="card" style="border-color:var(--purple)">
+    <div class="row between"><h3>${title}</h3>
+      <span class="pill" style="${bad?'color:var(--red)':'color:var(--accent2)'}">${hrs>0&&hrs<=24?hrs.toFixed(1)+' h':'check times'}</span></div>
+    <label>Bedtime (when you fell asleep)</label>
+    <input type="datetime-local" value="${E.start}" oninput="SLEEP_EDIT.start=this.value;render()">
+    <div class="row" style="gap:6px;margin-top:6px">
+      <button class="btn ghost mini" onclick="sleepShift('start',-30)">−30m</button>
+      <button class="btn ghost mini" onclick="sleepShift('start',-15)">−15m</button>
+      <button class="btn ghost mini" onclick="sleepShift('start',15)">+15m</button>
+      <button class="btn ghost mini" onclick="sleepShift('start',30)">+30m</button>
+    </div>`;
+  if(!bedOnly){
+    h+=`<label style="margin-top:12px">Wake time (when you actually woke up)</label>
+    <input type="datetime-local" value="${E.end}" oninput="SLEEP_EDIT.end=this.value;render()">
+    <div class="row" style="gap:6px;margin-top:6px">
+      <button class="btn ghost mini" onclick="sleepShift('end',-120)">−2h</button>
+      <button class="btn ghost mini" onclick="sleepShift('end',-60)">−1h</button>
+      <button class="btn ghost mini" onclick="sleepShift('end',-30)">−30m</button>
+      <button class="btn ghost mini" onclick="sleepShift('end',-15)">−15m</button>
+      <button class="btn ghost mini" onclick="sleepShift('end',15)">+15m</button>
+    </div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">Tapped End Sleep late? Pull the wake time back with −1h / −30m until it's right.</p>`;
+  }
+  h+=`<div style="height:10px"></div>
+    <button class="btn big" ${bad?'disabled style="opacity:.5"':''} onclick="saveSleepEdit()">✅ Save</button>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <button class="btn ghost mini" onclick="cancelSleepEdit()">Cancel</button>
+      ${E.mode==='edit'?`<button class="btn ghost mini" style="color:var(--red)" onclick="deleteSleepEntry()">🗑 Delete night</button>`:''}
+    </div></div>`;
+  return h;
+}
+
+window.sleepShift=(field,mins)=>{SLEEP_EDIT[field]=shiftInput(SLEEP_EDIT[field],mins);render()};
+window.cancelSleepEdit=()=>{SLEEP_EDIT=null;render()};
+
 window.startSleep=()=>{DB.set('sleepActive',{start:new Date().toISOString()});toast('Good night 🌙');render()};
+
+// End Sleep now opens the editor prefilled (bed = when you tapped Start, wake = now) so times can be corrected.
 window.endSleep=()=>{const sa=DB.get('sleepActive',null);if(!sa)return;
-  const end=new Date(),start=new Date(sa.start),hours=Math.max(0,(end-start)/3600000);
-  const log=DB.get('sleep',[]);log.push({date:end.toISOString().slice(0,10),start:sa.start,end:end.toISOString(),hours});
-  DB.set('sleep',log);DB.set('sleepActive',null);toast('Slept '+hours.toFixed(1)+' h');render()};
+  SLEEP_EDIT={mode:'end',start:toInput(sa.start),end:toInput(new Date())};
+  setTab('today');render()};
+
+window.editBedtime=()=>{const sa=DB.get('sleepActive',null);if(!sa)return;
+  SLEEP_EDIT={mode:'bed',start:toInput(sa.start)};TAB='today';render()};
+
+window.editSleep=i=>{const log=DB.get('sleep',[]);const s=log[i];if(!s)return;
+  if(!s.start||!s.end){alert('This night has no start/end times to edit.');return}
+  SLEEP_EDIT={mode:'edit',idx:i,start:toInput(s.start),end:toInput(s.end)};
+  setTab('today');window.scrollTo(0,0);render()};
+
+window.saveSleepEdit=()=>{const E=SLEEP_EDIT;if(!E)return;
+  if(E.mode==='bed'){
+    const start=fromInput(E.start);
+    if(start>new Date()){alert('Bedtime can’t be in the future.');return}
+    DB.set('sleepActive',{start:start.toISOString()});
+    SLEEP_EDIT=null;toast('Bedtime updated');render();return;
+  }
+  const start=fromInput(E.start), end=fromInput(E.end), hours=(end-start)/3600000;
+  if(!(hours>0&&hours<=24)){alert('Check the times — wake should be after bedtime, within 24h.');return}
+  const entry={date:toInput(end).slice(0,10),start:start.toISOString(),end:end.toISOString(),hours};
+  const log=DB.get('sleep',[]);
+  if(E.mode==='edit') log[E.idx]=entry; else log.push(entry);
+  log.sort((a,b)=> a.end<b.end?-1:1);
+  DB.set('sleep',log);
+  if(E.mode==='end') DB.set('sleepActive',null);
+  SLEEP_EDIT=null;toast('Slept '+hours.toFixed(1)+' h');render()};
+
+window.deleteSleepEntry=()=>{const E=SLEEP_EDIT;if(!E||E.mode!=='edit')return;
+  if(!confirm('Delete this night from your sleep log?'))return;
+  const log=DB.get('sleep',[]);log.splice(E.idx,1);DB.set('sleep',log);
+  SLEEP_EDIT=null;toast('Night deleted');render()};
+
 window.addSleepManual=()=>{const s=$('#slS').value,e=$('#slE').value;
   if(!s||!e){alert('Pick both a bed and wake time.');return}
   const start=new Date(s),end=new Date(e),hours=Math.max(0,(end-start)/3600000);
   if(hours<=0||hours>24){alert('Check the times — wake should be after bedtime.');return}
-  const log=DB.get('sleep',[]);log.push({date:end.toISOString().slice(0,10),start:start.toISOString(),end:end.toISOString(),hours});
+  const log=DB.get('sleep',[]);log.push({date:toInput(end).slice(0,10),start:start.toISOString(),end:end.toISOString(),hours});
   log.sort((a,b)=> a.end<b.end?-1:1);DB.set('sleep',log);toast('Sleep added');render()};
 
 /* ============ START WORKOUT (guided) ============ */
@@ -601,9 +692,11 @@ function renderTrack(){
     if(lo!=null&&hi!=null) h+=`<p class="quote">Under 7h you rate feeling ~${lo.toFixed(1)}/5, vs ~${hi.toFixed(1)}/5 on 7h+.${hi>lo?' More sleep tracks with feeling better.':''}</p>`;
   }
   h+=`<div style="margin-top:4px">`;
-  sleep.slice(-8).reverse().forEach(s=>{const f=notes[s.date]&&notes[s.date].feel;
+  sleep.slice(-8).reverse().forEach((s,j)=>{const f=notes[s.date]&&notes[s.date].feel;
+    const idx=sleep.length-1-j;
     h+=`<div class="ex"><div class="row between"><div>${s.date} <span class="muted" style="font-size:12px">${s.start?tclock(s.start)+'–'+tclock(s.end):'from Health'}</span></div>
-      <div class="w">${s.hours.toFixed(1)}h${f?' · feel '+f+'/5':''}</div></div></div>`});
+      <div class="row" style="gap:8px"><div class="w">${s.hours.toFixed(1)}h${f?' · feel '+f+'/5':''}</div>
+      ${s.start&&s.end?`<button class="btn ghost mini" style="padding:4px 8px" onclick="editSleep(${idx})">✏️</button>`:''}</div></div></div>`});
   h+=`</div><label>Add a night manually</label>
     <div class="grid2"><div><label>Bed</label><input id="slS" type="datetime-local"></div>
     <div><label>Wake</label><input id="slE" type="datetime-local"></div></div>
@@ -663,7 +756,7 @@ function lineChart(vals,unit){
     <polyline fill="none" stroke="var(--accent2)" stroke-width="2.5" points="${pts}"/>
     ${vals.map((v,i)=>{const x=pad+i*(w-2*pad)/(vals.length-1);const y=h-pad-(v-min)/rng*(h-2*pad);
       return `<circle cx="${x}" cy="${y}" r="3" fill="var(--accent)"/>`}).join('')}
-  </svg><div class="row between"><span class="muted" style="font-size:11px">${min} ${unit}</span>
+    </svg><div class="row between"><span class="muted" style="font-size:11px">${min} ${unit}</span>
     <span class="muted" style="font-size:11px">${max} ${unit}</span></div>`;
 }
 
@@ -692,7 +785,7 @@ function renderTime(){
     {t:'5:30–6:15a',label:'Morning workout (protected)'},
     {t:'6:15–6:45a',label:'Warm-up done · family breakfast'},
     {t:'8:00a–4:00p',label:'EverPro — work block (boundary)'},
-    {t:'Evening',label:'10-min reset · family time'},
+    {t:'6:00–6:15p',label:'Evening reset · stretch with Julian'},
   ]);
   h+=`<h2>2 · Intentional calendar</h2><p class="muted" style="font-size:12px">Protect what matters with time-blocks — workout included.</p><div class="card">`;
   blocks.forEach((b,i)=>{
