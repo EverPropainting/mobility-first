@@ -401,26 +401,84 @@ function draftLog(i){return state.draft?.logs.find(l=>l.slot===i);}
 function elapsed(){return state.draft?Math.max(0,Math.floor((Date.now()-state.draft.started)/60000)):0;}
 function thisWeek(){const now=new Date(),monday=new Date(now);monday.setDate(now.getDate()-((now.getDay()+6)%7));const start=M.localDate(monday);return state.history.filter(s=>s.date>=start&&s.date<=M.localDate(now));}
 function setLabel(n){return n===1?'1 set':`${n} sets`;}
-function qigongBlock(){
-  const idx=state.qigongIndex||1;
-  const moves=M.QIGONG[idx]||M.QIGONG[1];
-  return `<div class="card" id="qigong-card"><h2>Qigong warm-up</h2><p class="muted">Set ${idx} of 5 · hops + rag dolls every day, then today’s pair.</p><ul>${moves.map(([n,d])=>`<li><strong>${escape(n)}</strong> — ${escape(d)}</li>`).join('')}</ul><small>Do Qigong first, then Peloton.</small></div>`;
+function qigongBlock(idx){
+  const i=Number.isInteger(idx)?idx:(state.qigongIndex||1);
+  const moves=M.QIGONG[i]||M.QIGONG[1];
+  return `<div class="card" id="qigong-card"><h2>Qigong warm-up</h2><p class="muted">Set ${i} of 5 · hops + rag dolls every day, then today’s pair.</p><ul>${moves.map(([n,d])=>`<li><strong>${escape(n)}</strong> — ${escape(d)}</li>`).join('')}</ul><small>Do Qigong first, then Peloton.</small></div>`;
+}
+function draftStage(d){
+  if(!d)return null;
+  if(d.stage==='qigong'||d.stage==='peloton'||d.stage==='strength')return d.stage;
+  /* Legacy drafts (no stage): strength if any logs, else Qigong entry */
+  if(Array.isArray(d.logs)&&d.logs.length)return 'strength';
+  return 'qigong';
+}
+function setDraftStage(stage){
+  if(!state.draft)return false;
+  state.draft.stage=stage;
+  return persist();
 }
 function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));if(editing!==null)return renderExercise();({today:renderToday,daily:renderDaily,plan:renderPlan,progress:renderProgress}[view])();}
 function renderToday(){
  const d=state.draft,letter=d?.letter||state.next,session=M.sessions[letter];
  const list=slots(letter), done=d?.logs.length||0, total=list.length;
+ const stage=draftStage(d);
+ if(d && (stage==='qigong'||stage==='peloton')){
+  const qi=d.qigongIndex||state.qigongIndex||1;
+  const hasLogs=Array.isArray(d.logs)&&d.logs.length>0;
+  const backStrength=hasLogs?`<button class="plain" id="warmup-back-strength">Back to strength (keeps logged sets)</button>`:'';
+  if(stage==='qigong'){
+   app.innerHTML=`<div class="row"><span class="eyebrow">${escape(new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}))}</span><span class="pill">${thisWeek().length} / 5 this week</span></div>
+ <h1>Qigong first.</h1>
+ <p class="muted">Session ${d.letter} · warm-up step 1 of 2 · ${elapsed()} min since starting</p>
+ ${qigongBlock(qi)}
+ <div class="card session" id="warmup-qigong-step"><p class="muted">Complete this Qigong set, then continue to Peloton. Closing the page keeps your place.</p>
+ <button class="primary" id="warmup-continue-qigong">Qigong done — continue to Peloton</button>
+ ${backStrength}
+ <button class="plain" id="discard">Discard this session</button></div>
+ <p class="muted">Logged strength sets are kept when you move between warm-up and strength.</p>`;
+   $('#warmup-continue-qigong').onclick=()=>{if(setDraftStage('peloton')){editing=null;form=null;render();window.scrollTo(0,0);}};
+   if($('#warmup-back-strength'))$('#warmup-back-strength').onclick=()=>{if(setDraftStage('strength')){editing=null;form=null;render();window.scrollTo(0,0);}};
+   $('#discard').onclick=()=>{if(confirm('Discard this unfinished session? Your completed history stays saved.')){state.draft=null;persist();render();}};
+   return;
+  }
+  /* peloton stage */
+  const pel=d.peloton||'20-minute ride';
+  app.innerHTML=`<div class="row"><span class="eyebrow">${escape(new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}))}</span><span class="pill">${thisWeek().length} / 5 this week</span></div>
+ <h1>Peloton warm-up.</h1>
+ <p class="muted">Session ${d.letter} · warm-up step 2 of 2 · after Qigong · ${elapsed()} min since starting</p>
+ <div class="card session" id="warmup-peloton-step">
+ <label for="peloton">Today’s Peloton warm-up</label>
+ <select id="peloton"><option ${pel==='20-minute ride'?'selected':''}>20-minute ride</option><option ${pel==='20-minute yoga'?'selected':''}>20-minute yoga</option></select>
+ <small>Qigong first, then Peloton. Enter your class choice here.</small>
+ <button class="primary finish" id="warmup-continue-peloton">Peloton done — continue to strength</button>
+ <button class="plain" id="warmup-back-qigong">Back to Qigong</button>
+ ${backStrength}
+ <button class="plain" id="discard">Discard this session</button></div>
+ <p class="muted">Logged strength sets are kept when you move between warm-up and strength.</p>`;
+  $('#warmup-continue-peloton').onclick=()=>{
+   d.peloton=$('#peloton').value;
+   if(!setDraftStage('strength'))return;
+   editing=null;form=null;
+   if(hasLogs){render();window.scrollTo(0,0);}
+   else openExercise(0);
+  };
+  $('#warmup-back-qigong').onclick=()=>{d.peloton=$('#peloton').value;if(setDraftStage('qigong')){editing=null;form=null;render();window.scrollTo(0,0);}};
+  if($('#warmup-back-strength'))$('#warmup-back-strength').onclick=()=>{d.peloton=$('#peloton').value;if(setDraftStage('strength')){editing=null;form=null;render();window.scrollTo(0,0);}};
+  $('#discard').onclick=()=>{if(confirm('Discard this unfinished session? Your completed history stays saved.')){state.draft=null;persist();render();}};
+  return;
+ }
  app.innerHTML=`<div class="row"><span class="eyebrow">${escape(new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}))}</span><span class="pill">${thisWeek().length} / 5 this week</span></div>
  <h1>${d?'Pick up where you left off.':'Your next session.'}</h1>
  ${loadProblem?'<p class="notice">Saved data could not be read. Export it from Backup before starting a new record.</p>':''}
  ${lastBackupKey?`<p class="notice" id="migration-notice">Migrated to v2. Pre-migration copy stored as <code>${escape(lastBackupKey)}</code>. Also use Backup → Download on your iPhone before any production upgrade.</p>`:''}
  ${dailyCard()}${sleepCard()}
  <div class="card session"><div class="row"><div><span class="eyebrow">You pick A / B / C</span><h2 style="margin-top:8px">${session.title}</h2><small>Qigong · 20 min Peloton · ~25–35 min movement · short core</small></div><span class="letter" id="session-letter">${letter}</span></div>
- ${d?`<progress value="${done}" max="${total}" aria-label="Exercise logging progress"></progress><div class="row"><small>${done} / ${total} exercises logged</small><small id="elapsed">${elapsed()} min since starting</small></div>`:`
+ ${d?`<progress value="${done}" max="${total}" aria-label="Exercise logging progress"></progress><div class="row"><small>${done} / ${total} exercises logged</small><small id="elapsed">${elapsed()} min since starting</small></div><p class="muted" id="warmup-stage-note">Warm-up stage: strength. <button type="button" class="plain" id="review-warmup" style="display:inline;min-height:auto;padding:0 4px;text-decoration:underline">Review Qigong / Peloton</button> without losing logged sets.</p>`:`
  <label>Choose today’s routine</label>
  <div class="grid3 seg" id="routine-picker" role="radiogroup" aria-label="Routine">${M.DAY.map(L=>`<button type="button" data-letter="${L}" aria-pressed="${L===letter}" class="${L===letter?'selected':''}">${L}<br><small>${escape(M.sessions[L].title)}</small></button>`).join('')}</div>
  ${qigongBlock()}
- <label for="peloton">Today’s Peloton warm-up</label><select id="peloton"><option>20-minute ride</option><option>20-minute yoga</option></select><small>Qigong first, then Peloton. Enter your class choice here.</small>
+ <p class="muted" id="warmup-flow-note">After you tap Start: dedicated Qigong step → Peloton → first strength exercise. Closing mid-warm-up resumes where you left off.</p>
  <label for="before">Stiffness before · 0 loose, 10 very stiff</label><input id="before" type="number" min="0" max="10" inputmode="numeric" placeholder="Optional">`}
  <ul class="exercise-list">${list.map(s=>{const l=draftLog(s.index);const id=l?.variant||s.variant;return `<li><span class="number ${l?'completed':''}">${l?'✓':s.index+1}</span><div><strong>${escape(M.variants[id].name)}</strong><br><small>${setLabel(s.sets)}${M.variants[id].side?' · both sides':''}</small></div>${d?`<button class="secondary" data-edit="${s.index}">${l?'Edit':'Log'}</button>`:''}</li>`;}).join('')}</ul>
  ${d?`<button class="primary" id="continue">${done===total?'Review & finish':'Continue workout'}</button><button class="plain" id="finish-early">Finish a shortened session</button><button class="plain" id="discard">Discard this session</button>`:`<button class="primary" id="start" style="margin-top:16px" ${loadProblem?'disabled':''}>Start session</button>`}</div>
@@ -446,10 +504,11 @@ function renderToday(){
    const checkin=state.daily[M.localDate()];
    const coreId=M.CORE[state.coreIndex%4];
    state.choices[picked+(M.sessions[picked].slots.length-1)]=coreId;
-   state.draft={letter:picked,date:M.localDate(),started:Date.now(),peloton:$('#peloton').value,qigongIndex:state.qigongIndex,before:before===''?null:+before,checkin:checkin?JSON.parse(JSON.stringify(checkin)):null,logs:[],partial:{}};
-   if(persist())openExercise(0);
+   state.draft={letter:picked,date:M.localDate(),started:Date.now(),peloton:'20-minute ride',qigongIndex:state.qigongIndex,before:before===''?null:+before,checkin:checkin?JSON.parse(JSON.stringify(checkin)):null,logs:[],partial:{},stage:'qigong'};
+   if(persist()){editing=null;form=null;render();window.scrollTo(0,0);}
   };
  } else {
+  if($('#review-warmup'))$('#review-warmup').onclick=()=>{if(setDraftStage('qigong')){editing=null;form=null;render();window.scrollTo(0,0);}};
   $('#continue').onclick=()=>done===total?finishDialog():openExercise(list.find(s=>!draftLog(s.index)).index);
   $('#finish-early').onclick=()=>finishDialog(true);
   $('#discard').onclick=()=>{if(confirm('Discard this unfinished session? Your completed history stays saved.')){state.draft=null;persist();render();}};
@@ -516,7 +575,7 @@ function finishDialog(short=false){
  $('#complete').onclick=()=>{
   const a=$('#after').value;if(a!==''&&(!Number.isFinite(+a)||+a<0||+a>10))return toast('Choose stiffness from 0 to 10.');
   const finished={...d,date:M.localDate(),ended:Date.now(),after:a===''?null:+a,ankle:$('#ankle').value,back:$('#back-response').value,short:d.logs.length<total||d.logs.some(l=>l.slot<4&&l.sets.length<2)};
-  delete finished.partial;
+  delete finished.partial;delete finished.stage;
   state.history.push(finished);
   state.next=M.nextLetter(d.letter);
   state.qigongIndex=(state.qigongIndex%5)+1;
