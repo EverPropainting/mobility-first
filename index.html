@@ -6,77 +6,261 @@
 (function(root){
  'use strict';
  const DAY=['A','B','C'];
+ const CORE=['bird','deadbug','glute_march','sideplank'];
+ const QIGONG={
+  1:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Wuji standing breath','4 breaths'],['Opening/closing hands','8 reps']],
+  2:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Cloud hands','8 each way'],['Knocking on the door','45 sec']],
+  3:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Spinal wave','6 reps'],['Figure-8 arm swings','8 each way']],
+  4:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Shaking the tree','45 sec'],['Scooping from the earth','8 reps']],
+  5:[['Lymphatic hops','45 sec'],['Rag dolls','6 slow reps'],['Bear sways / weight shift','8 each way'],['Crane opens wings','8 reps']]
+ };
  const variants={
   squat:{name:'Goblet squat',equipment:'Dumbbell or kettlebell',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Keep your feet steady. Lower into a comfortable range, then stand smoothly.'},
+  squat_smith:{name:'Smith machine squat',equipment:'Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Controlled path. Stop before your lower back rounds; keep depth pain-free.'},
+  squat_band:{name:'Band goblet squat',equipment:'Resistance band',unit:'Band',band:true,kind:'reps',range:[8,12],cue:'Light option when joints feel stiff. Stay controlled.'},
   row2:{name:'B52 two-arm cable row',equipment:'B52 · two cables',unit:'lb on each stack',cable:true,kind:'reps',range:[10,12],step:5,cue:'Set both stacks equally. Row without rocking your lower back; let your shoulder blades move naturally.'},
   row1:{name:'B52 single-arm cable row',equipment:'B52 · one cable',unit:'lb on working stack',cable:true,side:true,kind:'reps',range:[8,10],step:5,cue:'Finish both sides. Keep the load controlled and use a comfortable reach.'},
   rowdb:{name:'Chest-supported dumbbell row',equipment:'Incline bench · dumbbells',unit:'lb per dumbbell',kind:'reps',range:[10,12],step:5,cue:'Support your chest on the bench. Pull smoothly without shrugging.'},
+  row_smith:{name:'Chest-supported Smith row',equipment:'Incline bench · Smith machine',unit:'lb total',kind:'reps',range:[10,12],step:5,cue:'Chest on the pad. Pull smoothly without shrugging.'},
+  row_band:{name:'Band row',equipment:'Resistance band',unit:'Band',band:true,kind:'reps',range:[10,12],cue:'Soft option. No load conversion from cable or dumbbells.'},
   lunge:{name:'Supported reverse lunge',equipment:'Rack support · optional dumbbells',unit:'lb per dumbbell',side:true,kind:'reps',range:[6,10],step:5,cue:'Start with bodyweight and light rack support. Step back and lower only as far as feels comfortable.'},
+  lunge_smith:{name:'Smith reverse lunge',equipment:'Smith machine · rack nearby',unit:'lb total',side:true,kind:'reps',range:[6,10],step:5,cue:'Controlled step-back. Stay shallow if ankle or back complain.'},
+  lunge_band:{name:'Band-assisted reverse lunge',equipment:'Resistance band · rack support',unit:'Band',band:true,side:true,kind:'reps',range:[6,10],cue:'Use assistance when the right ankle is irritable.'},
   openbook:{name:'Open-book rotation',equipment:'Floor',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[5,8],cue:'Lie on your side with bent knees stacked. Turn your chest and arm gently; do not force the shoulder to the floor.'},
   hinge:{name:'Dumbbell Romanian deadlift',equipment:'Dumbbells',unit:'lb per dumbbell',kind:'reps',range:[8,12],step:5,cue:'Soften your knees and send your hips back. Stop before your back rounds or symptoms increase.'},
+  hinge_smith:{name:'Smith Romanian deadlift',equipment:'Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Soft knees, hips back. Neutral spine; stop before the back rounds. Start light; control range before load.'},
+  hinge_band:{name:'Band Romanian deadlift',equipment:'Resistance band',unit:'Band',band:true,kind:'reps',range:[8,12],cue:'Light hinge day. Soft knees; stop before the back rounds.'},
+  deadlift_db:{name:'Standard dumbbell deadlift',equipment:'Dumbbells',unit:'lb per dumbbell',kind:'reps',range:[5,8],step:5,cue:'Neutral spine, brace, start light. Control range before load. Pull from the floor or blocks as available.'},
+  deadlift_smith:{name:'Smith/barbell deadlift',equipment:'Smith machine',unit:'lb total',kind:'reps',range:[5,8],step:5,cue:'Neutral spine, brace, start light. Control range before load. Stop if form breaks.'},
   press2:{name:'Low-incline dumbbell press',equipment:'Adjustable bench · dumbbells',unit:'lb per dumbbell',kind:'reps',range:[8,12],step:5,cue:'Use a comfortable grip and modest bench angle. Leave about three good repetitions in reserve.'},
-  balance:{name:'Single-leg balance with small reaches',equipment:'Rack support nearby',unit:'Bodyweight',body:true,side:true,kind:'seconds',range:[20,30],cue:'Reach the free foot a short distance forward, sideways, and back. Use fingertip support when helpful.'},
+  press2_smith:{name:'Low-incline Smith press',equipment:'Adjustable bench · Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Same incline intent as the dumbbell press. Own log history.'},
+  press2_cable:{name:'Cable chest press',equipment:'B52 · cable/pulley · bench',unit:'lb on each stack',cable:true,kind:'reps',range:[8,12],step:5,cue:'Seated or bench-supported. Ribs down; modest range.'},
+  balance:{name:'Single-leg balance with small reaches',equipment:'Rack support nearby',unit:'Bodyweight',body:true,side:true,kind:'seconds',range:[20,30],cue:'Legacy option kept for old logs. Prefer a movement-based balance choice.'},
+  balance_reach:{name:'Single-leg reach / Y-reach',equipment:'Floor · rack nearby',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,10],cue:'Reach the free foot forward, sideways, and back with control. Fingertip support OK. Right ankle guides depth.'},
+  balance_stepover:{name:'Lateral step-overs',equipment:'Floor · low line or hurdle',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,10],cue:'Step over a low line side to side. Clear the line; no ankle rolling.'},
+  balance_walkreach:{name:'Walking lunge with reach',equipment:'Floor · rack nearby',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,10],cue:'Short walking lunges with a light reach. Shorten the step if the ankle is irritable.'},
+  bosu_split:{name:'Bosu split squat',equipment:'Bosu · rack nearby',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,10],cue:'Optional Bosu. Use rack support. Stop if control is lost. Dome up or down per comfort.'},
+  bosu_reach:{name:'Bosu single-leg reach',equipment:'Bosu · rack nearby',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[5,8],cue:'Optional Bosu. Start with dual support, then single-leg reaches. Right ankle guides.'},
+  bosu_stepover:{name:'Bosu lateral step-over / on-off',equipment:'Bosu',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,10],cue:'Optional Bosu. Controlled on-and-off or step-over. No rush.'},
   lat2:{name:'B52 two-arm lat pulldown',equipment:'B52 · pulldown station',unit:'lb on selected stack',cable:true,kind:'reps',range:[8,12],step:5,cue:'Sit securely with overhead clearance. Pull in front of you without leaning far back. Record the stack setting, not estimated hand resistance.'},
   lat1:{name:'B52 single-arm pulldown',equipment:'B52 · one cable',unit:'lb on working stack',cable:true,side:true,kind:'reps',range:[8,10],step:5,cue:'Use a seated or kneeling position with clearance. Work both sides without arching your lower back.'},
+  lat_band:{name:'Band lat pulldown',equipment:'Resistance band · high anchor',unit:'Band',band:true,kind:'reps',range:[8,12],cue:'Kneeling or seated. Same vertical-pull intent. No pull-ups.'},
   bird:{name:'Bird dog',equipment:'Floor',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[5,8],cue:'From hands and knees, extend opposite arm and leg without arching your back. Hold each repetition for three seconds.'},
+  deadbug:{name:'Dead Bug',equipment:'Floor',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[6,8],cue:'Low back glued to the floor. Move opposite arm and leg slowly.'},
+  glute_march:{name:'Glute Bridge March',equipment:'Floor',unit:'Bodyweight',body:true,side:true,kind:'reps',range:[8,10],cue:'Hips level, no rocking. Alternate marching knees.'},
+  sideplank:{name:'Side Plank',equipment:'Floor',unit:'Bodyweight',body:true,side:true,kind:'seconds',range:[15,30],cue:'Short holds both sides. Regress to knees if needed.'},
   lateral:{name:'Supported lateral lunge',equipment:'Rack support · optional dumbbell',unit:'lb total',side:true,kind:'reps',range:[6,10],step:5,cue:'Begin shallow and unweighted. Shift into one hip while keeping the other leg relatively straight.'},
+  lateral_band:{name:'Band lateral lunge / lateral walk',equipment:'Resistance band · rack nearby',unit:'Band',band:true,side:true,kind:'reps',range:[6,10],cue:'Light frontal-plane option. Stay shallow if hips or ankles complain.'},
   overhead1:{name:'Half-kneeling one-arm press',equipment:'Dumbbell · padded knee',unit:'lb on working arm',side:true,kind:'reps',range:[8,12],step:5,cue:'Check ceiling clearance. Keep ribs stacked over your pelvis. Change to an incline press if your shoulder is irritated.'},
   overhead2:{name:'Seated two-arm dumbbell press',equipment:'Bench · dumbbells',unit:'lb per dumbbell',kind:'reps',range:[8,12],step:5,cue:'Use bench support and confirm overhead clearance. Press in a comfortable range without arching.'},
+  overhead2_smith:{name:'Seated Smith press',equipment:'Bench · Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Seated only for ceiling clearance. No standing overhead Smith.'},
+  overhead1_cable:{name:'Half-kneeling one-arm cable press',equipment:'B52 · one cable · padded knee',unit:'lb on working stack',cable:true,side:true,kind:'reps',range:[8,12],step:5,cue:'Same half-kneeling pattern on cable. Ribs stacked.'},
   face:{name:'B52 rope face pull',equipment:'B52 · rope',unit:'lb on selected stack',cable:true,kind:'reps',range:[10,12],step:5,cue:'Use light resistance. Pull toward your face without shrugging or forcing your elbows backward.'},
+  face_band:{name:'Band face pull',equipment:'Resistance band · high anchor',unit:'Band',band:true,kind:'reps',range:[10,12],cue:'Same pull-to-face pattern, light.'},
+  face_db:{name:'Seated dumbbell rear-delt raise',equipment:'Bench · light dumbbells',unit:'lb per dumbbell',kind:'reps',range:[10,12],step:2.5,cue:'Controlled; no shrug.'},
   rotate:{name:'B52 standing cable rotation',equipment:'B52 · light cable',unit:'lb on working stack',cable:true,side:true,kind:'reps',range:[6,10],step:5,cue:'Turn smoothly, letting feet pivot and hips follow. Do not force rotation through a fixed lower back.'},
   bandrotate:{name:'Standing band rotation',equipment:'Light resistance band',unit:'Band',band:true,side:true,kind:'reps',range:[6,10],cue:'Use light tension and a steady pace. Let your feet and hips turn with your chest.'},
   calf:{name:'Supported two-leg calf raise',equipment:'Rack support · optional load',unit:'lb total',kind:'reps',range:[10,12],step:5,cue:'Begin on level ground with bodyweight. Lift both heels, then lower slowly. No painful ankle rolling.'},
+  calf_smith:{name:'Smith standing calf raise',equipment:'Smith machine',unit:'lb total',kind:'reps',range:[10,12],step:5,cue:'Standing calf option. Controlled; no painful ankle rolling. Right ankle guides.'},
   bandankle:{name:'Band-resisted foot movement outward',equipment:'Light band · seated',unit:'Band',band:true,side:true,kind:'reps',range:[10,12],cue:'Work both ankles. Move the foot outward gently without turning the whole leg. Right ankle tolerance guides its resistance.'},
-  seatedcalf:{name:'Seated bent-knee calf raise',equipment:'Bench · optional dumbbells',unit:'lb per thigh',kind:'reps',range:[12,15],step:5,cue:'Start unweighted. Lift and slowly lower both heels. Add a light dumbbell on each thigh only when comfortable.'}
+  seatedcalf:{name:'Seated bent-knee calf raise',equipment:'Bench · optional dumbbells',unit:'lb per thigh',kind:'reps',range:[12,15],step:5,cue:'Sit on the bench with optional dumbbells on each thigh — not a calf machine. Start unweighted.'},
+  curl_db:{name:'Dumbbell curl',equipment:'Dumbbells',unit:'lb per dumbbell',kind:'reps',range:[8,12],step:5,cue:'No swinging the lower back. Smooth curls.'},
+  curl_cable:{name:'Cable curl',equipment:'B52 · cable',unit:'lb on selected stack',cable:true,kind:'reps',range:[8,12],step:5,cue:'Constant tension. Brace; do not lean for momentum.'},
+  curl_ez:{name:'EZ-bar curl',equipment:'EZ bar',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Wrist-friendlier bar curl. No cheat lean.'},
+  curl_smith:{name:'Smith curl',equipment:'Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Fixed-path curl. Light; no cheat lean.'},
+  tri_pushdown:{name:'Cable pushdown',equipment:'B52 · cable',unit:'lb on selected stack',cable:true,kind:'reps',range:[8,12],step:5,cue:'Ribs stacked. Smooth lockout without elbow pain.'},
+  tri_oh_db:{name:'Overhead DB extension',equipment:'Dumbbell · seated or kneeling',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Seated or kneeling for ceiling clearance. Do not arch the low back.'},
+  tri_oh_cable:{name:'Overhead cable extension',equipment:'B52 · cable · seated or kneeling',unit:'lb on selected stack',cable:true,kind:'reps',range:[8,12],step:5,cue:'Seated or kneeling. Ribs down; no lumbar flare.'},
+  tri_cg_db:{name:'Close-grip DB bench',equipment:'Bench · dumbbells',unit:'lb per dumbbell',kind:'reps',range:[8,12],step:5,cue:'Controlled on the B52 bench. Elbows track comfortably.'},
+  tri_cg_smith:{name:'Close-grip Smith bench',equipment:'Bench · Smith machine',unit:'lb total',kind:'reps',range:[8,12],step:5,cue:'Fixed-path close-grip press. Controlled.'},
+  latraise_db:{name:'Dumbbell lateral raise',equipment:'Dumbbells · seated OK',unit:'lb per dumbbell',kind:'reps',range:[10,15],step:2.5,cue:'Soft elbows; no shrug or lean-swing. Light to moderate.'},
+  latraise_cable:{name:'Cable lateral raise',equipment:'B52 · one cable',unit:'lb on working stack',cable:true,side:true,kind:'reps',range:[10,15],step:2.5,cue:'Single-arm. Finish both sides. Soft elbows; no shrug.'},
+  latraise_band:{name:'Band lateral raise',equipment:'Resistance band',unit:'Band',band:true,kind:'reps',range:[10,15],cue:'Soft option. Soft elbows; no shrug.'}
  };
+ /* Slots are {name, role, sets, ids}. sets are explicit (not inferred from index).
+    A/B unchanged order. C owner order: Sideways, Press, Shoulders, Lateral raise, Rotate, Ankle, Core.
+    balance legacy id kept out of B picker. */
  const sessions={
-  A:{title:'Squat, pull & rotation',slots:[['Squat','squat'],['Row','row2','row1','rowdb'],['Lunge','lunge'],['Rotate gently','openbook'],['Ankle finish','calf']]},
-  B:{title:'Hinge, push & balance',slots:[['Hinge','hinge'],['Press','press2'],['Balance','balance'],['Pull or trunk control','lat2','lat1','bird'],['Ankle finish','bandankle']]},
-  C:{title:'Sideways, shoulders & rotation',slots:[['Move sideways','lateral'],['Press','overhead1','overhead2','press2'],['Shoulders & upper back','face'],['Rotate with control','rotate','bandrotate'],['Ankle finish','seatedcalf']]}
+  A:{title:'Squat, pull & rotation',slots:[
+   {name:'Squat',role:'main',sets:3,ids:['squat','squat_smith','squat_band']},
+   {name:'Row',role:'main',sets:3,ids:['row2','row1','rowdb','row_smith','row_band']},
+   {name:'Lunge',role:'main',sets:3,ids:['lunge','lunge_smith','lunge_band']},
+   {name:'Rotate gently',role:'main',sets:3,ids:['openbook']},
+   {name:'Ankle finish',role:'ankle',sets:1,ids:['calf','calf_smith','seatedcalf']},
+   {name:'Biceps',role:'accessory',sets:2,ids:['curl_db','curl_cable','curl_ez','curl_smith']},
+   {name:'Core finisher',role:'core',sets:1,ids:['bird','deadbug','glute_march','sideplank']}
+  ]},
+  B:{title:'Hinge, push & balance',slots:[
+   {name:'Hinge',role:'main',sets:3,ids:['hinge','hinge_smith','hinge_band','deadlift_db','deadlift_smith']},
+   {name:'Press',role:'main',sets:3,ids:['press2','press2_smith','press2_cable']},
+   {name:'Balance',role:'main',sets:3,ids:['balance_reach','balance_stepover','balance_walkreach','bosu_split','bosu_reach','bosu_stepover']},
+   {name:'Pull or trunk control',role:'main',sets:3,ids:['lat2','lat1','bird','lat_band']},
+   {name:'Ankle finish',role:'ankle',sets:1,ids:['bandankle','calf','calf_smith']},
+   {name:'Triceps',role:'accessory',sets:2,ids:['tri_pushdown','tri_oh_db','tri_oh_cable','tri_cg_db','tri_cg_smith']},
+   {name:'Core finisher',role:'core',sets:1,ids:['bird','deadbug','glute_march','sideplank']}
+  ]},
+  C:{title:'Sideways, shoulders & rotation',slots:[
+   {name:'Move sideways',role:'main',sets:3,ids:['lateral','lateral_band']},
+   {name:'Press',role:'main',sets:3,ids:['overhead1','overhead2','press2','overhead2_smith','press2_smith','overhead1_cable']},
+   {name:'Shoulders & upper back',role:'main',sets:3,ids:['face','face_band','face_db']},
+   {name:'Side delts',role:'accessory',sets:2,ids:['latraise_db','latraise_cable','latraise_band']},
+   {name:'Rotate with control',role:'main',sets:3,ids:['rotate','bandrotate']},
+   {name:'Ankle finish',role:'ankle',sets:1,ids:['seatedcalf','calf','calf_smith']},
+   {name:'Core finisher',role:'core',sets:1,ids:['bird','deadbug','glute_march','sideplank']}
+  ]}
  };
  function localDate(date=new Date()){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
  function lastLogs(history,id){return history.flatMap(s=>(s.logs||[]).map(l=>({...l,date:s.date}))).filter(l=>l.variant===id && l.sets && l.sets.length);}
- function suggest(history,id){
-  const v=variants[id], logs=lastLogs(history,id), last=logs.at(-1);
-  if(!last)return {load:0,addon:0,target:v.range[0],increase:false,reason:v.body?'Start at the lower target and stay controlled.':'Choose a light starting resistance. This is a baseline, not a prescribed weight.'};
+ function lastTime(history,id){
+  const last=lastLogs(history,id).at(-1);
+  if(!last)return {load:0,addon:0,reps:variants[id]?.range?.[0]||8,band:last?.band||'Light',has:false};
   const first=last.sets[0];
-  const result={load:first.load||0,addon:first.addon||0,target:first.reps||v.range[0],band:last.band||'Light',increase:false,reason:'Repeat your last setting and aim for smooth, comfortable movement.'};
-  if(last.pain){result.reason='Symptoms were flagged. No increase suggested; reduce or change the movement if it still bothers you.';result.target=v.range[0];return result;}
-  if(last.effort==='hard'){result.reason='Last time felt too hard. Repeat only if comfortable, or lower the resistance.';result.target=v.range[0];return result;}
-  const qualifies=l=>!l.pain && ['easy','right'].includes(l.effort) && l.sets.length >= (l.finish?1:2) && l.sets.every(s=>s.reps>=v.range[1]) && l.sets.every(s=>s.load===l.sets[0].load && s.addon===l.sets[0].addon);
-  const previous=logs.at(-2);
-  if(previous && qualifies(last) && qualifies(previous) && previous.sets[0].load===first.load && previous.sets[0].addon===first.addon){
-   if(v.body||v.band){result.reason='Two comfortable sessions at the upper target. Keep the dose; focus on control or slightly less support.';}
-   else {const change=Number(last.increment)||v.step;const base=Number(first.load)||0;const add=Number(first.addon)||0;const total=base+add;const cap=id.includes('db')||['hinge','press2','overhead1','overhead2'].includes(id)?50:Infinity;
-    if(total===0 || change/total>.15 || total+change>cap){result.reason='You reached the target twice. A full weight jump is large or exceeds your dumbbells; keep this load or use a smaller available increment.';}
-    else{result.load=base;result.addon=add; if(v.cable && base+change>170)result.addon+=change;else result.load+=change;result.target=v.range[0];result.increase=true;result.reason=`Two comfortable sessions at the upper target. Optional +${change} lb in the same weight convention; confirm the increment is available.`;}
-   }
-  } else if(first.reps<v.range[1] && last.sets.every(s=>s.reps>=first.reps)){result.target=Math.min(v.range[1],first.reps+1);result.reason='Keep the resistance. Try one more controlled repetition if it feels comfortable.';}
-  return result;
+  return {load:first.load||0,addon:first.addon||0,reps:first.reps||variants[id].range[0],band:last.band||'Light',has:true,feel:first.feel||last.effort||null,sets:last.sets};
+ }
+ /* suggest kept for compatibility but must NOT propose load bumps — last-time only. */
+ function suggest(history,id){
+  const v=variants[id], lt=lastTime(history,id);
+  if(!lt.has)return {load:0,addon:0,target:v.range[0],increase:false,band:'Light',reason:v.body?'No history yet. Start controlled at the lower target.':'No history yet. Choose a light starting resistance yourself.'};
+  return {load:lt.load,addon:lt.addon,target:lt.reps,band:lt.band,increase:false,reason:'Last time for this option is shown above. Choose your next weight yourself — no suggested bump.'};
  }
  function nextLetter(letter){return DAY[(DAY.indexOf(letter)+1)%3];}
- function blank(){return {version:1,next:'A',history:[],draft:null,choices:{},daily:{},sleep:[],sleepActive:null};}
+ function slotSetCount(letter,index){
+  const slot=sessions[letter].slots[index];
+  if(!slot)throw Error('Unknown slot');
+  return slot.sets;
+ }
+ function slotRole(letter,index){
+  return sessions[letter].slots[index]?.role||'main';
+ }
+ /* Old C order (v1 + first preview build): 0 sideways,1 press,2 shoulders,3 rotate,4 ankle[,5 latraise,6 core].
+    New C order: 0 sideways,1 press,2 shoulders,3 latraise,4 rotate,5 ankle,6 core.
+    Remap choices C3↔C4↔C5 additively; do not delete source keys. History logs stay keyed by variant. */
+ function remapCSlotChoices(choices){
+  const out={...(choices||{})};
+  const lat=new Set(['latraise_db','latraise_cable','latraise_band']);
+  const rot=new Set(['rotate','bandrotate']);
+  const ank=new Set(['seatedcalf','calf','calf_smith']);
+  const c3=out.C3,c4=out.C4,c5=out.C5;
+  /* Already new layout: latraise at C3, or rotate at C4 with ankle at C5. */
+  if(c3&&lat.has(c3))return out;
+  if(c4&&rot.has(c4)&&c5&&ank.has(c5))return out;
+  if(c4&&rot.has(c4)&&!(c3&&rot.has(c3))&&!(c4&&ank.has(c4)))return out;
+  const oldPattern=(c3&&rot.has(c3))||(c4&&ank.has(c4))||(c5&&lat.has(c5));
+  if(!oldPattern)return out;
+  /* Write destination keys; leave originals in place (additive). */
+  if(c3&&rot.has(c3))out.C4=c3;
+  if(c4&&ank.has(c4))out.C5=c4;
+  if(c5&&lat.has(c5))out.C3=c5;
+  return out;
+ }
+ function remapCDraft(draft){
+  if(!draft||draft.letter!=='C'||draft.cSlotRemapped)return draft;
+  const map={3:4,4:5,5:3};
+  const out=clone(draft);
+  if(Array.isArray(out.logs)){
+   out.logs=out.logs.map(l=>{
+    if(l&&Number.isInteger(l.slot)&&map[l.slot]!=null){
+     const next={...l,slot:map[l.slot]};
+     /* finish flag followed ankle index 4 in old layout; recompute from role after remap */
+     if(sessions.C.slots[next.slot]) next.finish=sessions.C.slots[next.slot].role==='ankle';
+     return next;
+    }
+    return l;
+   });
+  }
+  if(out.partial&&typeof out.partial==='object'&&!Array.isArray(out.partial)){
+   const np={};
+   for(const [k,v] of Object.entries(out.partial)){
+    const i=Number(k);
+    const nk=Number.isInteger(i)&&map[i]!=null?String(map[i]):k;
+    np[nk]=v;
+   }
+   out.partial=np;
+  }
+  out.cSlotRemapped=true;
+  return out;
+ }
+ function blank(){return {version:2,next:'A',history:[],draft:null,choices:{},daily:{},sleep:[],sleepActive:null,qigongIndex:1,coreIndex:0,cSlotLayout:2};}
  function sleepEntry(start,end,id=String(Date.now())){
   const a=new Date(start),b=new Date(end),hours=(b-a)/3600000;
   if(!Number.isFinite(hours)||hours<=0||hours>24)throw Error('Wake time must be after bedtime and within 24 hours.');
   return {id,date:localDate(b),start:a.toISOString(),end:b.toISOString(),hours};
  }
  function dateInput(value){const d=new Date(value);return `${localDate(d)}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+ function clone(data){return JSON.parse(JSON.stringify(data));}
+ function migrate(data){
+  if(!data)return blank();
+  if(data.version===2){
+   const out={...blank(),...data,version:2};
+   if(!Number.isInteger(out.qigongIndex)||out.qigongIndex<1||out.qigongIndex>5)out.qigongIndex=1;
+   if(!Number.isInteger(out.coreIndex)||out.coreIndex<0||out.coreIndex>3)out.coreIndex=0;
+   /* Preview-build v2 may still have old C slot indices; blank() defaults cSlotLayout so check data. */
+   if(data.cSlotLayout!==2){
+    out.choices=remapCSlotChoices(out.choices);
+    out.draft=remapCDraft(out.draft);
+    out.cSlotLayout=2;
+   }
+   return out;
+  }
+  if(data.version===1){
+   const out=clone(data);
+   out.version=2;
+   if(out.qigongIndex==null)out.qigongIndex=1;
+   if(out.coreIndex==null)out.coreIndex=0;
+   /* Remap C choice indices for Rotate/Ankle (and latraise if present). History logs stay by variant id. */
+   out.choices=remapCSlotChoices(out.choices);
+   out.draft=remapCDraft(out.draft);
+   out.cSlotLayout=2;
+   return out;
+  }
+  throw Error('Unsupported Mobility First data version.');
+ }
  function validate(data){
-  if(!data||data.version!==1||!DAY.includes(data.next)||!Array.isArray(data.history)||data.history.length>20000)throw Error('This is not a valid Mobility First backup.');
-  for(const s of data.history){if(!DAY.includes(s.letter)||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.logs)||s.logs.length>5)throw Error('Invalid session in backup.');for(const score of [s.before,s.after])if(score!=null&&(!Number.isFinite(score)||score<0||score>10))throw Error('Invalid stiffness score.');for(const l of s.logs){if(!variants[l.variant]||!Array.isArray(l.sets)||!l.sets.length||l.sets.length>3||!['easy','right','hard'].includes(l.effort))throw Error('Invalid exercise in backup.');for(const set of l.sets)if(![set.load,set.addon,set.reps].every(n=>Number.isFinite(n)&&n>=0&&n<=2000)||set.reps>999)throw Error('Invalid set in backup.');}}
-  for(const [key,id] of Object.entries(data.choices||{})){const letter=key[0],index=Number(key.slice(1));if(!DAY.includes(letter)||!Number.isInteger(index)||!sessions[letter].slots[index]?.slice(1).includes(id))throw Error('Invalid exercise choice in backup.');}
+  if(!data||![1,2].includes(data.version)||!DAY.includes(data.next)||!Array.isArray(data.history)||data.history.length>20000)throw Error('This is not a valid Mobility First backup.');
+  const effortOk=e=>['easy','good','hard','right'].includes(e);
+  for(const s of data.history){
+   if(!DAY.includes(s.letter)||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.logs)||s.logs.length>8)throw Error('Invalid session in backup.');
+   for(const score of [s.before,s.after])if(score!=null&&(!Number.isFinite(score)||score<0||score>10))throw Error('Invalid stiffness score.');
+   for(const l of s.logs){
+    if(!variants[l.variant]||!Array.isArray(l.sets)||!l.sets.length||l.sets.length>3)throw Error('Invalid exercise in backup.');
+    if(l.effort!=null&&!effortOk(l.effort))throw Error('Invalid effort in backup.');
+    for(const set of l.sets){
+     if(![set.load,set.addon,set.reps].every(n=>Number.isFinite(n)&&n>=0&&n<=2000)||set.reps>999)throw Error('Invalid set in backup.');
+     if(set.feel!=null&&!['easy','good','hard'].includes(set.feel))throw Error('Invalid set feel in backup.');
+    }
+   }
+  }
+  for(const [key,id] of Object.entries(data.choices||{})){
+   const letter=key[0],index=Number(key.slice(1));
+   if(!DAY.includes(letter)||!Number.isInteger(index))throw Error('Invalid exercise choice in backup.');
+   const slot=sessions[letter].slots[index];
+   /* Allow legacy choices (e.g. balance, or pre-remap C indices) still in variants even if not in this slot's ids */
+   if(slot&&!slot.ids.includes(id)&&!variants[id])throw Error('Invalid exercise choice in backup.');
+   if(!variants[id])throw Error('Invalid exercise choice in backup.');
+  }
   if(data.daily!=null&&(typeof data.daily!=='object'||Array.isArray(data.daily)))throw Error('Invalid daily records.');
   for(const [date,entry] of Object.entries(data.daily||{})){
-   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!entry||entry.weight!=null&&(!Number.isFinite(entry.weight)||entry.weight<=0||entry.weight>1500)||entry.feel!=null&&(!Number.isInteger(entry.feel)||entry.feel<1||entry.feel>5)||!Array.isArray(entry.reasons)||entry.reasons.some(r=>!['Tired','Sick','Sore'].includes(r)))throw Error('Invalid daily check-in.');
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!entry)throw Error('Invalid daily check-in.');
+   if(entry.weight!=null&&(!Number.isFinite(entry.weight)||entry.weight<=0||entry.weight>1500))throw Error('Invalid daily check-in.');
+   if(entry.feel!=null&&(!Number.isInteger(entry.feel)||entry.feel<1||entry.feel>5))throw Error('Invalid daily check-in.');
+   if(entry.reasons!=null&&(!Array.isArray(entry.reasons)||entry.reasons.some(r=>!['Tired','Sick','Sore'].includes(r))))throw Error('Invalid daily check-in.');
+   if(entry.eveningYoga!=null){
+    const y=entry.eveningYoga;
+    if(typeof y!=='object'||(y.done!=null&&typeof y.done!=='boolean')||(y.stiffnessAfter!=null&&(!Number.isFinite(y.stiffnessAfter)||y.stiffnessAfter<0||y.stiffnessAfter>10)))throw Error('Invalid evening yoga record.');
+   }
   }
   if(data.sleep!=null&&!Array.isArray(data.sleep))throw Error('Invalid sleep records.');
   const sleepIds=new Set();
   for(const s of data.sleep||[]){const calculated=sleepEntry(s.start,s.end,s.id);if(typeof s.id!=='string'||sleepIds.has(s.id)||!Number.isFinite(s.hours)||calculated.date!==s.date||Math.abs(calculated.hours-s.hours)>.0001)throw Error('Invalid sleep entry.');sleepIds.add(s.id);}
   if(data.sleepActive!=null&&(!data.sleepActive.start||!Number.isFinite(new Date(data.sleepActive.start).getTime())))throw Error('Invalid active sleep timer.');
-  return {...blank(),...data,draft:null,choices:data.choices&&typeof data.choices==='object'?data.choices:{}};
+  if(data.version===2){
+   if(data.qigongIndex!=null&&(!Number.isInteger(data.qigongIndex)||data.qigongIndex<1||data.qigongIndex>5))throw Error('Invalid qigong index.');
+   if(data.coreIndex!=null&&(!Number.isInteger(data.coreIndex)||data.coreIndex<0||data.coreIndex>3))throw Error('Invalid core index.');
+  }
+  const base=blank();
+  return {...base,...data,draft:data.draft??null,choices:data.choices&&typeof data.choices==='object'?data.choices:{}};
  }
- const api={DAY,variants,sessions,localDate,lastLogs,suggest,nextLetter,blank,validate,sleepEntry,dateInput};
+ const api={DAY,CORE,QIGONG,variants,sessions,localDate,lastLogs,lastTime,suggest,nextLetter,slotSetCount,slotRole,remapCSlotChoices,blank,migrate,validate,sleepEntry,dateInput,clone};
  if(typeof module!=='undefined')module.exports=api;root.Mobility=api;
 })(typeof globalThis!=='undefined'?globalThis:window);
 
@@ -85,8 +269,10 @@
 'use strict';
 function sleepDuration(hours){const minutes=Math.round(hours*60);return `${Math.floor(minutes/60)}h ${String(minutes%60).padStart(2,'0')}m`;}
 function dailyCard(date=M.localDate()){
- const entry=state.daily[date]||{weight:null,feel:null,reasons:[]};
- return `<section class="card"><h2>Daily check-in</h2><p class="muted">How are you feeling before your workout? 1 is low; 5 is your best.</p><label for="daily-weight">Bodyweight · lb</label><input id="daily-weight" type="number" min="1" max="1500" step="0.1" inputmode="decimal" placeholder="Optional" value="${entry.weight??''}"><label>How I feel · 1–5</label><div class="feel-score seg" role="group" aria-label="Daily feeling score">${[1,2,3,4,5].map(n=>`<button type="button" data-feel="${n}" aria-pressed="${entry.feel===n}" class="${entry.feel===n?'selected':''}">${n}</button>`).join('')}</div><p><small>What’s affecting how you feel? Choose any that apply.</small></p><div class="grid3 seg">${['Tired','Sick','Sore'].map(r=>`<button type="button" data-reason="${r}" aria-pressed="${entry.reasons.includes(r)}" class="${entry.reasons.includes(r)?'selected':''}">${r}</button>`).join('')}</div><button class="primary finish" id="save-daily" ${loadProblem?'disabled':''}>Save check-in</button><small id="daily-saved">${state.daily[date]?'Saved for '+date+'. Saving again updates this day.':'Optional · you can log this on rest days, too.'}</small></section>`;
+ const entry=state.daily[date]||{weight:null,feel:null,reasons:[],eveningYoga:null};
+ const reasons=entry.reasons||[];
+ const yoga=entry.eveningYoga||{done:false,stiffnessAfter:null};
+ return `<section class="card"><h2>Daily check-in</h2><p class="muted">How are you feeling before your workout? 1 is low; 5 is your best.</p><label for="daily-weight">Bodyweight · lb</label><input id="daily-weight" type="number" min="1" max="1500" step="0.1" inputmode="decimal" placeholder="Optional" value="${entry.weight??''}"><label>How I feel · 1–5</label><div class="feel-score seg" role="group" aria-label="Daily feeling score">${[1,2,3,4,5].map(n=>`<button type="button" data-feel="${n}" aria-pressed="${entry.feel===n}" class="${entry.feel===n?'selected':''}">${n}</button>`).join('')}</div><p><small>What’s affecting how you feel? Choose any that apply.</small></p><div class="grid3 seg">${['Tired','Sick','Sore'].map(r=>`<button type="button" data-reason="${r}" aria-pressed="${reasons.includes(r)}" class="${reasons.includes(r)?'selected':''}">${r}</button>`).join('')}</div><hr style="border:none;border-top:1px solid var(--line,#ddd);margin:16px 0"><h3 style="margin:0 0 8px;font-size:1rem">Evening Peloton yoga</h3><label class="check-label"><input id="evening-yoga" type="checkbox" ${yoga.done?'checked':''}> Did 15-minute evening yoga</label><label for="yoga-stiffness">Stiffness after yoga · 0 loose, 10 very stiff</label><input id="yoga-stiffness" type="number" min="0" max="10" inputmode="numeric" placeholder="Optional" value="${yoga.stiffnessAfter??''}"><button class="primary finish" id="save-daily" ${loadProblem?'disabled':''}>Save check-in</button><small id="daily-saved">${state.daily[date]?'Saved for '+date+'. Saving again updates this day.':'Optional · you can log this on rest days, too.'}</small></section>`;
 }
 function bindDaily(date=M.localDate()){
  $('#save-daily').onclick=()=>{
@@ -94,9 +280,15 @@ function bindDaily(date=M.localDate()){
   if(weight!==null&&(!Number.isFinite(weight)||weight<=0||weight>1500))return toast('Enter a valid bodyweight in pounds.');
   const selected=app.querySelector('[data-feel][aria-pressed="true"]');
   const reasons=[...app.querySelectorAll('[data-reason][aria-pressed="true"]')].map(b=>b.dataset.reason);
-  const entry={weight,feel:selected?Number(selected.dataset.feel):null,reasons};
-  if(weight===null&&entry.feel===null&&!reasons.length)return toast('Enter your weight, a feeling score, or a reason.');
-  const old=state.daily[date];state.daily[date]=entry;
+  const yogaDone=$('#evening-yoga')?.checked||false;
+  const yogaStiffRaw=$('#yoga-stiffness')?.value??'';
+  const yogaStiff=yogaStiffRaw===''?null:Number(yogaStiffRaw);
+  if(yogaStiff!==null&&(!Number.isFinite(yogaStiff)||yogaStiff<0||yogaStiff>10))return toast('Yoga stiffness must be 0–10.');
+  const eveningYoga=(yogaDone||yogaStiff!==null)?{done:yogaDone,stiffnessAfter:yogaStiff}:null;
+  const prev=state.daily[date]||{};
+  const entry={weight,feel:selected?Number(selected.dataset.feel):null,reasons,eveningYoga:eveningYoga??prev.eveningYoga??null};
+  if(weight===null&&entry.feel===null&&!reasons.length&&!eveningYoga&&!prev.eveningYoga)return toast('Enter your weight, a feeling score, a reason, or evening yoga.');
+  const old=state.daily[date];state.daily[date]={...prev,...entry,reasons};
   if(!persist()){if(old)state.daily[date]=old;else delete state.daily[date];return;}
   $('#daily-saved').textContent='Saved for '+date+'. Saving again updates this day.';toast('Daily check-in saved');
  };
@@ -138,7 +330,7 @@ let dailyDate;
 function renderDaily(){
  const date=dailyDate||M.localDate();
  const records=Object.entries(state.daily).sort(([a],[b])=>b.localeCompare(a)).slice(0,14);
- app.innerHTML=`<span class="eyebrow">Rest days count, too</span><h1>Your daily picture.</h1><label for="checkin-date">Check-in date</label><input id="checkin-date" type="date" max="${M.localDate()}" value="${date}">${dailyCard(date)}${sleepCard()}<section class="card"><h2>Recent check-ins</h2>${records.length?records.map(([day,e])=>`<div class="record row"><div><strong>${day}</strong><br><small>${e.weight==null?'Weight —':e.weight+' lb'} · Feeling ${e.feel??'—'}/5${e.reasons.length?'<br>'+e.reasons.map(escape).join(', '):''}</small></div><button class="secondary" data-checkin-edit="${day}">Edit</button></div>`).join(''):'<p class="muted">Your daily records will appear here.</p>'}</section><section class="card"><h2>Sleep history</h2>${state.sleep.length?state.sleep.slice(-14).reverse().map(s=>`<div class="record"><div class="row"><strong>${s.date} · ${sleepDuration(s.hours)}</strong><button class="secondary" data-sleep-edit="${escape(s.id)}">Edit</button></div><small>${escape(new Date(s.start).toLocaleString())} → ${escape(new Date(s.end).toLocaleString())}</small></div>`).join(''):'<p class="muted">Your recorded nights will appear here.</p>'}</section>`;
+ app.innerHTML=`<span class="eyebrow">Rest days count, too</span><h1>Your daily picture.</h1><label for="checkin-date">Check-in date</label><input id="checkin-date" type="date" max="${M.localDate()}" value="${date}">${dailyCard(date)}${sleepCard()}<section class="card"><h2>Recent check-ins</h2>${records.length?records.map(([day,e])=>`<div class="record row"><div><strong>${day}</strong><br><small>${e.weight==null?'Weight —':e.weight+' lb'} · Feeling ${e.feel??'—'}/5${(e.reasons||[]).length?'<br>'+(e.reasons||[]).map(escape).join(', '):''}${e.eveningYoga?`<br>Evening yoga: ${e.eveningYoga.done?'done':'not marked'}${e.eveningYoga.stiffnessAfter!=null?' · stiffness '+e.eveningYoga.stiffnessAfter+'/10':''}`:''}</small></div><button class="secondary" data-checkin-edit="${day}">Edit</button></div>`).join(''):'<p class="muted">Your daily records will appear here.</p>'}</section><section class="card"><h2>Sleep history</h2>${state.sleep.length?state.sleep.slice(-14).reverse().map(s=>`<div class="record"><div class="row"><strong>${s.date} · ${sleepDuration(s.hours)}</strong><button class="secondary" data-sleep-edit="${escape(s.id)}">Edit</button></div><small>${escape(new Date(s.start).toLocaleString())} → ${escape(new Date(s.end).toLocaleString())}</small></div>`).join(''):'<p class="muted">Your recorded nights will appear here.</p>'}</section>`;
  bindDaily(date);bindSleep();
  $('#checkin-date').onchange=e=>{if(!e.target.value||e.target.value>M.localDate())return toast('Choose today or an earlier date.');dailyDate=e.target.value;renderDaily();};
  app.querySelectorAll('[data-checkin-edit]').forEach(b=>b.onclick=()=>{dailyDate=b.dataset.checkinEdit;renderDaily();window.scrollTo(0,0);});
@@ -165,63 +357,142 @@ function wellnessProgress(){
 'use strict';
 const M=window.Mobility, KEY='mobility_first_v2', $=s=>document.querySelector(s), app=$('#app');
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state=M.blank(),view='today',editing=null,form=null,loadProblem=false;
-try{const raw=localStorage.getItem(KEY);if(raw){const parsed=JSON.parse(raw);M.validate(parsed);state={...M.blank(),...parsed};}}catch(e){loadProblem=true;}
+let state=M.blank(),view='today',editing=null,form=null,loadProblem=false,lastBackupKey=null;
+(function boot(){
+ try{
+  const raw=localStorage.getItem(KEY);
+  if(!raw){state=M.blank();return;}
+  const parsed=JSON.parse(raw);
+  if(parsed && parsed.version===1){
+   const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+   lastBackupKey=`mobility_first_v2_backup_v1_${stamp}`;
+   try{localStorage.setItem(lastBackupKey, raw);}catch(e){/* still migrate; Backup UI remains */}
+   const migrated=M.migrate(parsed);
+   M.validate(migrated);
+   state=migrated;
+   localStorage.setItem(KEY, JSON.stringify(state));
+  } else {
+   const migrated=M.migrate(parsed);
+   M.validate(migrated);
+   state={...M.blank(),...migrated};
+   if(parsed.version!==2)localStorage.setItem(KEY, JSON.stringify(state));
+  }
+ }catch(e){loadProblem=true;}
+})();
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(e){toast('Could not save. Keep this page open and export a backup.');return false;}}
 function toast(message){const el=$('#toast');el.textContent=message;el.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display='none',4500);}
 function modal(html){$('#modal-content').innerHTML=html;$('#modal').showModal();}
 $('#close-modal').onclick=()=>$('#modal').close();
 function move(next){view=next;editing=null;form=null;render();window.scrollTo(0,0);}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>move(b.dataset.view));
-function chosen(letter,index){return state.choices[letter+index]||M.sessions[letter].slots[index][1];}
-function slots(letter){return M.sessions[letter].slots.map((s,i)=>({name:s[0],variant:chosen(letter,i),index:i}));}
-function choiceOptions(letter,index,current){return M.sessions[letter].slots[index].slice(1).map(id=>`<option value="${id}" ${id===current?'selected':''}>${M.variants[id].name}</option>`).join('');}
+function chosen(letter,index){
+  const key=letter+index, slot=M.sessions[letter].slots[index];
+  if(state.choices[key] && M.variants[state.choices[key]]){
+    /* If legacy balance chosen on B balance slot, fall back to first movement option */
+    if(index===2 && letter==='B' && state.choices[key]==='balance') return slot.ids[0];
+    if(slot.ids.includes(state.choices[key])) return state.choices[key];
+  }
+  if(slot.role==='core' || index===M.sessions[letter].slots.length-1) return M.CORE[state.coreIndex%4];
+  return slot.ids[0];
+}
+function slots(letter){return M.sessions[letter].slots.map((s,i)=>({name:s.name,variant:chosen(letter,i),index:i,sets:s.sets,role:s.role}));}
+function choiceOptions(letter,index,current){return M.sessions[letter].slots[index].ids.map(id=>`<option value="${id}" ${id===current?'selected':''}>${M.variants[id].name}</option>`).join('');}
 function draftLog(i){return state.draft?.logs.find(l=>l.slot===i);}
 function elapsed(){return state.draft?Math.max(0,Math.floor((Date.now()-state.draft.started)/60000)):0;}
 function thisWeek(){const now=new Date(),monday=new Date(now);monday.setDate(now.getDate()-((now.getDay()+6)%7));const start=M.localDate(monday);return state.history.filter(s=>s.date>=start&&s.date<=M.localDate(now));}
+function setLabel(n){return n===1?'1 set':`${n} sets`;}
+function qigongBlock(){
+  const idx=state.qigongIndex||1;
+  const moves=M.QIGONG[idx]||M.QIGONG[1];
+  return `<div class="card" id="qigong-card"><h2>Qigong warm-up</h2><p class="muted">Set ${idx} of 5 · hops + rag dolls every day, then today’s pair.</p><ul>${moves.map(([n,d])=>`<li><strong>${escape(n)}</strong> — ${escape(d)}</li>`).join('')}</ul><small>Do Qigong first, then Peloton.</small></div>`;
+}
 function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));if(editing!==null)return renderExercise();({today:renderToday,daily:renderDaily,plan:renderPlan,progress:renderProgress}[view])();}
 function renderToday(){
  const d=state.draft,letter=d?.letter||state.next,session=M.sessions[letter];
- const done=d?.logs.length||0;
+ const list=slots(letter), done=d?.logs.length||0, total=list.length;
  app.innerHTML=`<div class="row"><span class="eyebrow">${escape(new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}))}</span><span class="pill">${thisWeek().length} / 5 this week</span></div>
  <h1>${d?'Pick up where you left off.':'Your next session.'}</h1>
  ${loadProblem?'<p class="notice">Saved data could not be read. Export it from Backup before starting a new record.</p>':''}
+ ${lastBackupKey?`<p class="notice" id="migration-notice">Migrated to v2. Pre-migration copy stored as <code>${escape(lastBackupKey)}</code>. Also use Backup → Download on your iPhone before any production upgrade.</p>`:''}
  ${dailyCard()}${sleepCard()}
- <div class="card session"><div class="row"><div><span class="eyebrow">Continuous A / B / C</span><h2 style="margin-top:8px">${session.title}</h2><small>20 min Peloton · 25–30 min movement</small></div><span class="letter">${letter}</span></div>
- ${d?`<progress value="${done}" max="5" aria-label="Exercise logging progress"></progress><div class="row"><small>${done} / 5 exercises logged</small><small id="elapsed">${elapsed()} min since starting</small></div>`:''}
- <ul class="exercise-list">${slots(letter).map(s=>{const l=draftLog(s.index);return `<li><span class="number ${l?'completed':''}">${l?'✓':s.index+1}</span><div><strong>${escape(M.variants[l?.variant||s.variant].name)}</strong><br><small>${s.index===4?'1 finishing set':'2 sets'}${M.variants[l?.variant||s.variant].side?' · both sides':''}</small></div>${d?`<button class="secondary" data-edit="${s.index}">${l?'Edit':'Log'}</button>`:''}</li>`;}).join('')}</ul>
- ${d?`<button class="primary" id="continue">${done===5?'Review & finish':'Continue workout'}</button><button class="plain" id="finish-early">Finish a shortened session</button><button class="plain" id="discard">Discard this session</button>`:`<label for="peloton">Today’s Peloton warm-up</label><select id="peloton"><option>20-minute ride</option><option>20-minute yoga</option></select><small>Enter your class choice here; Peloton recommendations aren’t connected yet.</small><label for="before">Stiffness before · 0 loose, 10 very stiff</label><input id="before" type="number" min="0" max="10" inputmode="numeric" placeholder="Optional"><button class="primary" id="start" style="margin-top:16px" ${loadProblem?'disabled':''}>Start session ${letter}</button>`}</div>
- <p class="muted">Aim to finish by 5:58 am. Keep the movements controlled; missed days never reset your rotation.</p>
+ <div class="card session"><div class="row"><div><span class="eyebrow">You pick A / B / C</span><h2 style="margin-top:8px">${session.title}</h2><small>Qigong · 20 min Peloton · ~25–35 min movement · short core</small></div><span class="letter" id="session-letter">${letter}</span></div>
+ ${d?`<progress value="${done}" max="${total}" aria-label="Exercise logging progress"></progress><div class="row"><small>${done} / ${total} exercises logged</small><small id="elapsed">${elapsed()} min since starting</small></div>`:`
+ <label>Choose today’s routine</label>
+ <div class="grid3 seg" id="routine-picker" role="radiogroup" aria-label="Routine">${M.DAY.map(L=>`<button type="button" data-letter="${L}" aria-pressed="${L===letter}" class="${L===letter?'selected':''}">${L}<br><small>${escape(M.sessions[L].title)}</small></button>`).join('')}</div>
+ ${qigongBlock()}
+ <label for="peloton">Today’s Peloton warm-up</label><select id="peloton"><option>20-minute ride</option><option>20-minute yoga</option></select><small>Qigong first, then Peloton. Enter your class choice here.</small>
+ <label for="before">Stiffness before · 0 loose, 10 very stiff</label><input id="before" type="number" min="0" max="10" inputmode="numeric" placeholder="Optional">`}
+ <ul class="exercise-list">${list.map(s=>{const l=draftLog(s.index);const id=l?.variant||s.variant;return `<li><span class="number ${l?'completed':''}">${l?'✓':s.index+1}</span><div><strong>${escape(M.variants[id].name)}</strong><br><small>${setLabel(s.sets)}${M.variants[id].side?' · both sides':''}</small></div>${d?`<button class="secondary" data-edit="${s.index}">${l?'Edit':'Log'}</button>`:''}</li>`;}).join('')}</ul>
+ ${d?`<button class="primary" id="continue">${done===total?'Review & finish':'Continue workout'}</button><button class="plain" id="finish-early">Finish a shortened session</button><button class="plain" id="discard">Discard this session</button>`:`<button class="primary" id="start" style="margin-top:16px" ${loadProblem?'disabled':''}>Start session</button>`}</div>
+ <p class="muted">Keep movements controlled. Missed days never reset your data. Pick A, B, or C yourself each time.</p>
  <details><summary>Three-minute preparation</summary><p>After Peloton: five seated ankle circles each direction on both sides, six comfortable supported ankle rocks per side, then five easy repetitions of the first lift.</p><a href="https://gmb.io/feet/" target="_blank" rel="noopener">Your GMB ankle reference</a></details>
- <details><summary>Training guidance</summary><p>Start light and leave about three comfortable repetitions in reserve. Use a comfortable range and slow lowering. Stop or change movements that cause sharp pain or ankle giving-way. Persistent or worsening ankle/back symptoms warrant a clinician’s assessment.</p><p>Record both sides; the right ankle can use less resistance. For bilateral work, the weaker side guides the load.</p><a href="https://www.orthoinfo.org/recovery/foot-and-ankle-conditioning-program/" target="_blank" rel="noopener">AAOS ankle conditioning guidance</a></details>`;
+ <details><summary>Training guidance</summary><p>Start light. First improve control and comfortable range, then reps, then resistance. Stop or change movements that cause sharp pain or ankle giving-way.</p><p>Record both sides; the right ankle can use less resistance.</p><a href="https://www.orthoinfo.org/recovery/foot-and-ankle-conditioning-program/" target="_blank" rel="noopener">AAOS ankle conditioning guidance</a></details>`;
  app.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openExercise(+b.dataset.edit));
  bindDaily();bindSleep();
- if(d){$('#continue').onclick=()=>done===5?finishDialog():openExercise(slots(letter).find(s=>!draftLog(s.index)).index);$('#finish-early').onclick=()=>finishDialog(true);$('#discard').onclick=()=>{if(confirm('Discard this unfinished session? Your completed history stays saved.')){state.draft=null;persist();render();}};}
- else $('#start').onclick=()=>{const before=$('#before').value;if(before!==''&&(!Number.isFinite(+before)||+before<0||+before>10))return toast('Choose stiffness from 0 to 10.');const checkin=state.daily[M.localDate()];state.draft={letter,date:M.localDate(),started:Date.now(),peloton:$('#peloton').value,before:before===''?null:+before,checkin:checkin?JSON.parse(JSON.stringify(checkin)):null,logs:[],partial:{}};if(persist())openExercise(0);};
+ if(!d){
+  let picked=letter;
+  app.querySelectorAll('#routine-picker [data-letter]').forEach(btn=>btn.onclick=()=>{
+   picked=btn.dataset.letter;
+   app.querySelectorAll('#routine-picker [data-letter]').forEach(b=>{const on=b===btn;b.setAttribute('aria-pressed',String(on));b.classList.toggle('selected',on);});
+   $('#session-letter').textContent=picked;
+   /* refresh list titles for selected letter without full re-render of draft-less path extras */
+   const ul=app.querySelector('.exercise-list');
+   ul.innerHTML=slots(picked).map(s=>`<li><span class="number">${s.index+1}</span><div><strong>${escape(M.variants[s.variant].name)}</strong><br><small>${setLabel(s.sets)}${M.variants[s.variant].side?' · both sides':''}</small></div></li>`).join('');
+   const h2=app.querySelector('.card.session h2'); if(h2)h2.textContent=M.sessions[picked].title;
+  });
+  $('#start').onclick=()=>{
+   const before=$('#before').value;
+   if(before!==''&&(!Number.isFinite(+before)||+before<0||+before>10))return toast('Choose stiffness from 0 to 10.');
+   const checkin=state.daily[M.localDate()];
+   const coreId=M.CORE[state.coreIndex%4];
+   state.choices[picked+(M.sessions[picked].slots.length-1)]=coreId;
+   state.draft={letter:picked,date:M.localDate(),started:Date.now(),peloton:$('#peloton').value,qigongIndex:state.qigongIndex,before:before===''?null:+before,checkin:checkin?JSON.parse(JSON.stringify(checkin)):null,logs:[],partial:{}};
+   if(persist())openExercise(0);
+  };
+ } else {
+  $('#continue').onclick=()=>done===total?finishDialog():openExercise(list.find(s=>!draftLog(s.index)).index);
+  $('#finish-early').onclick=()=>finishDialog(true);
+  $('#discard').onclick=()=>{if(confirm('Discard this unfinished session? Your completed history stays saved.')){state.draft=null;persist();render();}};
+ }
 }
 function openExercise(index){
  const d=state.draft;if(!d)return;
- const existing=draftLog(index),id=existing?.variant||chosen(d.letter,index),suggest=M.suggest(state.history,id),last=M.lastLogs(state.history,id).at(-1);
- editing=index;form=d.partial?.[index]||{variant:id,sets:existing?.sets.map(s=>({...s}))||Array.from({length:index===4?1:2},()=>({load:suggest.load,addon:suggest.addon,reps:suggest.target})),effort:existing?.effort||'',pain:existing?.pain||false,band:existing?.band||suggest.band||'Light',increment:existing?.increment||last?.increment||M.variants[id].step||5};render();window.scrollTo(0,0);
+ const existing=draftLog(index),id=existing?.variant||chosen(d.letter,index);
+ const lt=M.lastTime(state.history,id), nSets=M.slotSetCount(d.letter,index);
+ const blankSets=()=>Array.from({length:nSets},()=>({load:lt.has?lt.load:0,addon:lt.has?lt.addon:0,reps:lt.has?lt.reps:M.variants[id].range[0],feel:''}));
+ editing=index;
+ form=d.partial?.[index]||{variant:id,sets:existing?.sets.map(s=>({load:s.load,addon:s.addon,reps:s.reps,feel:s.feel||''}))||blankSets(),effort:existing?.effort||'',pain:existing?.pain||false,band:existing?.band||lt.band||'Light',increment:existing?.increment||M.lastLogs(state.history,id).at(-1)?.increment||M.variants[id].step||5};
+ render();window.scrollTo(0,0);
 }
 function cacheForm(){if(state.draft){state.draft.partial=state.draft.partial||{};state.draft.partial[editing]=JSON.parse(JSON.stringify(form));persist();}}
 function stepper(i,key,value,step,label){return `<div><label for="set-${i}-${key}">${label}</label><div class="stepper"><button type="button" data-step="${i},${key},-${step}" aria-label="Decrease set ${i+1} ${label}">−</button><input id="set-${i}-${key}" data-i="${i}" data-key="${key}" type="number" min="0" max="${key==='reps'?999:2000}" step="${step}" inputmode="decimal" value="${value}"><button type="button" data-step="${i},${key},${step}" aria-label="Increase set ${i+1} ${label}">+</button></div></div>`;}
+function feelButtons(i,current){
+ return `<div class="grid3 seg" role="group" aria-label="Set ${i+1} feel">${[['easy','Easy'],['good','Good'],['hard','Hard']].map(([k,lab])=>`<button type="button" data-feel-set="${i}" data-feel-val="${k}" aria-pressed="${current===k}" class="${current===k?'selected':''}">${lab}</button>`).join('')}</div>`;
+}
 function renderExercise(){
- const d=state.draft,v=M.variants[form.variant],s=M.suggest(state.history,form.variant),last=M.lastLogs(state.history,form.variant).at(-1);
- app.innerHTML=`<button class="plain" id="back">Back to session</button><div class="row"><span class="eyebrow">Session ${d.letter} · ${editing+1} of 5</span><span class="pill">${elapsed()} min</span></div><h1>${escape(v.name)}</h1>
+ const d=state.draft,v=M.variants[form.variant],last=M.lastLogs(state.history,form.variant).at(-1);
+ const total=M.sessions[d.letter].slots.length;
+ const lastLine=last?`Last time (${escape(last.date)}): ${last.sets.map(x=>{const feel=x.feel||last.effort||'';return `${x.load+x.addon}${v.body||v.band?'':' lb'} · ${x.reps} ${v.kind==='seconds'?'sec':'reps'}${feel?' · '+feel:''}`;}).join(' / ')}${v.side?' per side':''}`:'No history for this option yet. Choose your weight yourself.';
+ app.innerHTML=`<button class="plain" id="back">Back to session</button><div class="row"><span class="eyebrow">Session ${d.letter} · ${editing+1} of ${total}</span><span class="pill">${elapsed()} min</span></div><h1>${escape(v.name)}</h1>
  <div class="card"><label for="variation">Exercise option</label><select id="variation">${choiceOptions(d.letter,editing,form.variant)}</select><p class="cue">${v.cue}</p><small>${v.equipment}${v.side?' · finish both sides; log reps per side':''}</small></div>
- <div class="card"><h2>Log once, then move on.</h2><p class="muted">${last?`Last time: ${last.sets.map(x=>`${x.load+x.addon} ${v.body?'':v.band?'': 'lb · '}${x.reps} ${v.kind==='seconds'?'sec':'reps'}`).join(' / ')}${v.side?' per side':''}`:'No history for this variation yet.'}</p><p class="suggestion">${escape(s.reason)}</p><strong>${v.unit}</strong>${v.cable?'<p class="muted">Enter the stack selector and add-on separately. This records your machine setting; it does not estimate cable resistance. For two stacks, enter the setting on each stack—not their sum.</p>':''}
+ <div class="card"><h2>Log once, then move on.</h2><p class="muted" id="last-time">${lastLine}</p><p class="suggestion">Showing last time for this option only. No suggested weight — you decide.</p><strong>${v.unit}</strong>${v.cable?'<p class="muted">Enter the stack selector and add-on separately. For two stacks, enter the setting on each stack—not their sum.</p>':''}
  ${v.band?`<label for="band">Band resistance</label><select id="band">${['Light','Medium','Heavy'].map(x=>`<option ${x===form.band?'selected':''}>${x}</option>`).join('')}</select>`:''}
- ${form.sets.map((x,i)=>`<div class="set ${v.cable?'cable':v.body||v.band?'body':''}"><span class="setnumber">${i+1}</span>${v.body||v.band?'':stepper(i,'load',x.load,form.increment,v.cable?'Stack lb':'Weight lb')}${v.cable?stepper(i,'addon',x.addon,2.5,'Add-on lb'):''}${stepper(i,'reps',x.reps,1,v.kind==='seconds'?'Seconds':'Reps')}</div>`).join('')}
+ ${form.sets.map((x,i)=>`<div class="set ${v.cable?'cable':v.body||v.band?'body':''}"><span class="setnumber">${i+1}</span>${v.body||v.band?'':stepper(i,'load',x.load,form.increment,v.cable?'Stack lb':'Weight lb')}${v.cable?stepper(i,'addon',x.addon,2.5,'Add-on lb'):''}${stepper(i,'reps',x.reps,1,v.kind==='seconds'?'Seconds':'Reps')}<label>How did this set feel? (optional)</label>${feelButtons(i,x.feel||'')}</div>`).join('')}
  <div class="row wrap"><button class="secondary" id="match">Apply first set to all</button><div class="inline"><button class="plain" id="less" ${form.sets.length===1?'disabled':''}>− set</button><button class="plain" id="more" ${form.sets.length===3?'disabled':''}>+ set</button></div></div>
- <label>How did it feel?</label><div class="grid3 seg">${[['easy','Easy'],['right','About right'],['hard','Too hard']].map(([key,label])=>`<button class="${form.effort===key?'selected':''}" data-effort="${key}" aria-pressed="${form.effort===key}">${label}</button>`).join('')}</div>
+ <label>Overall feel (required)</label><div class="grid3 seg">${[['easy','Easy'],['good','Good'],['hard','Hard']].map(([key,label])=>`<button class="${form.effort===key?'selected':''}" data-effort="${key}" aria-pressed="${form.effort===key}">${label}</button>`).join('')}</div>
  <label class="check-label"><input id="pain" type="checkbox" ${form.pain?'checked':''}>Pain or instability during this exercise</label>
- <details><summary>Weight increment</summary><label for="increment">Smallest available increase in this weight convention</label><input id="increment" type="number" min="0.5" max="25" step="0.5" value="${form.increment}"><small>Suggestions use this increment after two comfortable exposures at the upper rep target. Large jumps are held.</small></details>
+ <details><summary>Weight increment note</summary><label for="increment">Smallest available increase in this weight convention</label><input id="increment" type="number" min="0.5" max="25" step="0.5" value="${form.increment}"><small>Stored for your records only — the app does not suggest a next weight.</small></details>
  <button class="primary finish" id="save-exercise">Save exercise & continue</button></div>`;
  $('#back').onclick=()=>{cacheForm();editing=null;form=null;render();};
- $('#variation').onchange=e=>{const id=e.target.value,v2=M.variants[id],s2=M.suggest(state.history,id);state.choices[d.letter+editing]=id;form={variant:id,sets:Array.from({length:editing===4?1:2},()=>({load:s2.load,addon:s2.addon,reps:s2.target})),effort:'',pain:false,band:s2.band||'Light',increment:M.lastLogs(state.history,id).at(-1)?.increment||v2.step||5};cacheForm();render();};
+ $('#variation').onchange=e=>{
+  const id=e.target.value, lt=M.lastTime(state.history,id), n=M.slotSetCount(d.letter,editing);
+  state.choices[d.letter+editing]=id;
+  form={variant:id,sets:Array.from({length:n},()=>({load:lt.has?lt.load:0,addon:lt.has?lt.addon:0,reps:lt.has?lt.reps:M.variants[id].range[0],feel:''})),effort:'',pain:false,band:lt.band||'Light',increment:M.lastLogs(state.history,id).at(-1)?.increment||M.variants[id].step||5};
+  cacheForm();render();
+ };
  app.querySelectorAll('[data-i]').forEach(input=>input.oninput=()=>{form.sets[+input.dataset.i][input.dataset.key]=input.value===''?NaN:+input.value;cacheForm();});
  app.querySelectorAll('[data-step]').forEach(button=>button.onclick=()=>{const [i,key,step]=button.dataset.step.split(',');form.sets[+i][key]=Math.max(0,(Number(form.sets[+i][key])||0)+Number(step));cacheForm();render();});
+ app.querySelectorAll('[data-feel-set]').forEach(b=>b.onclick=()=>{const i=+b.dataset.feelSet,val=b.dataset.feelVal;form.sets[i].feel=form.sets[i].feel===val?'':val;cacheForm();render();});
  $('#match').onclick=()=>{form.sets=form.sets.map(()=>({...form.sets[0]}));cacheForm();render();};
  $('#less').onclick=()=>{form.sets.pop();cacheForm();render();};$('#more').onclick=()=>{form.sets.push({...form.sets.at(-1)});cacheForm();render();};
  app.querySelectorAll('[data-effort]').forEach(b=>b.onclick=()=>{form.effort=b.dataset.effort;cacheForm();render();});
@@ -232,29 +503,42 @@ function renderExercise(){
   if(form.sets.some(x=>![x.load,x.addon,x.reps].every(Number.isFinite)||x.load<0||x.addon<0||x.reps<=0||x.reps>999||x.load+x.addon>2000))return toast('Check your weights and reps. Use positive reps or seconds.');
   if(v.cable && form.sets.some(x=>x.load>170))return toast('Enter up to 170 lb on the stack; record extra plates under Add-on.');
   if(v.body||v.band)form.sets.forEach(x=>{x.load=0;x.addon=0;});
-  const log={...JSON.parse(JSON.stringify(form)),slot:editing,finish:editing===4};
+  const cleanSets=form.sets.map(s=>{const o={load:s.load,addon:s.addon,reps:s.reps}; if(s.feel)o.feel=s.feel; return o;});
+  const log={variant:form.variant,sets:cleanSets,effort:form.effort,pain:form.pain,band:form.band,increment:form.increment,slot:editing,finish:M.slotRole(d.letter,editing)==='ankle'};
   d.logs=d.logs.filter(l=>l.slot!==editing);d.logs.push(log);d.logs.sort((a,b)=>a.slot-b.slot);delete d.partial[editing];
   if(!persist())return;editing=null;form=null;const remaining=slots(d.letter).find(x=>!draftLog(x.index));if(remaining)openExercise(remaining.index);else{render();finishDialog();}toast('Exercise saved');
  };
 }
 function finishDialog(short=false){
  const d=state.draft;if(!d)return;if(!d.logs.length)return toast('Log at least one exercise before finishing.');
- modal(`<h2>${short?'Finish a shortened session':'Session '+d.letter+' complete'}</h2><p>${d.logs.length} exercises logged · ${elapsed()} minutes including your warm-up.</p><label for="after">Stiffness after · 0 loose, 10 very stiff</label><input id="after" type="number" min="0" max="10" placeholder="Optional"><label for="ankle">Right ankle after</label><select id="ankle"><option value="">Not recorded</option><option>Better</option><option>Unchanged</option><option>Worse</option></select><label for="back-response">Lower back after</label><select id="back-response"><option value="">Not recorded</option><option>Better</option><option>Unchanged</option><option>Worse</option></select><p class="muted">Next session: ${M.nextLetter(d.letter)}. A shortened session counts toward consistency.</p><button id="complete" class="primary">Save session</button>`);
- $('#complete').onclick=()=>{const a=$('#after').value;if(a!==''&&(!Number.isFinite(+a)||+a<0||+a>10))return toast('Choose stiffness from 0 to 10.');const finished={...d,date:M.localDate(),ended:Date.now(),after:a===''?null:+a,ankle:$('#ankle').value,back:$('#back-response').value,short:d.logs.length<5||d.logs.some(l=>!l.finish&&l.sets.length<2)};delete finished.partial;state.history.push(finished);state.next=M.nextLetter(d.letter);state.draft=null;if(!persist())return;$('#modal').close();editing=null;form=null;view='today';render();toast('Session saved. Next up: '+state.next);};
+ const total=M.sessions[d.letter].slots.length;
+ modal(`<h2>${short?'Finish a shortened session':'Session '+d.letter+' complete'}</h2><p>${d.logs.length} exercises logged · ${elapsed()} minutes including your warm-up.</p><label for="after">Stiffness after · 0 loose, 10 very stiff</label><input id="after" type="number" min="0" max="10" placeholder="Optional"><label for="ankle">Right ankle after</label><select id="ankle"><option value="">Not recorded</option><option>Better</option><option>Unchanged</option><option>Worse</option></select><label for="back-response">Lower back after</label><select id="back-response"><option value="">Not recorded</option><option>Better</option><option>Unchanged</option><option>Worse</option></select><p class="muted">Rotation hint (not forced): ${M.nextLetter(d.letter)}. You still pick A/B/C next time. A shortened session counts toward consistency.</p><button id="complete" class="primary">Save session</button>`);
+ $('#complete').onclick=()=>{
+  const a=$('#after').value;if(a!==''&&(!Number.isFinite(+a)||+a<0||+a>10))return toast('Choose stiffness from 0 to 10.');
+  const finished={...d,date:M.localDate(),ended:Date.now(),after:a===''?null:+a,ankle:$('#ankle').value,back:$('#back-response').value,short:d.logs.length<total||d.logs.some(l=>l.slot<4&&l.sets.length<2)};
+  delete finished.partial;
+  state.history.push(finished);
+  state.next=M.nextLetter(d.letter);
+  state.qigongIndex=(state.qigongIndex%5)+1;
+  state.coreIndex=(state.coreIndex+1)%4;
+  state.draft=null;
+  if(!persist())return;
+  $('#modal').close();editing=null;form=null;view='today';render();toast('Session saved. Next hint: '+state.next);
+ };
 }
-function renderPlan(){app.innerHTML=`<span class="eyebrow">A repeatable practice</span><h1>Strength with movement.</h1><p class="muted">A / B / C continuously. Two sets per main exercise, one ankle finishing set. Choose your option; its history stays separate.</p>${M.DAY.map(letter=>`<section class="card session"><div class="row"><h2>${M.sessions[letter].title}</h2><span class="letter">${letter}</span></div>${slots(letter).map(s=>`<div class="record"><label for="plan-${letter}-${s.index}">${s.name}</label><select id="plan-${letter}-${s.index}" data-letter="${letter}" data-slot="${s.index}">${choiceOptions(letter,s.index,s.variant)}</select><small>${M.variants[s.variant].range.join('–')} ${M.variants[s.variant].kind==='seconds'?'seconds':'reps'}${M.variants[s.variant].side?' per side':''} · ${s.index===4?1:2} sets</small><p>${M.variants[s.variant].cue}</p></div>`).join('')}</section>`).join('')}<div class="card"><h2>Progress at your pace</h2><p>Begin with light loads. First improve control and comfortable range, then reps, then resistance. No automatic load increases after painful or overly difficult work.</p><p>Overhead options are seated or kneeling for your ceiling. The ankle finish always works both sides.</p></div>`;app.querySelectorAll('[data-letter]').forEach(s=>s.onchange=()=>{state.choices[s.dataset.letter+s.dataset.slot]=s.value;persist();render();});}
+function renderPlan(){app.innerHTML=`<span class="eyebrow">A repeatable practice</span><h1>Strength with movement.</h1><p class="muted">You pick A / B / C. Mains 3 sets · ankle finish 1 · arms/side-delts 2 · short core. Each option keeps its own history.</p>${M.DAY.map(letter=>`<section class="card session"><div class="row"><h2>${M.sessions[letter].title}</h2><span class="letter">${letter}</span></div>${slots(letter).map(s=>`<div class="record"><label for="plan-${letter}-${s.index}">${s.name}</label><select id="plan-${letter}-${s.index}" data-letter="${letter}" data-slot="${s.index}">${choiceOptions(letter,s.index,s.variant)}</select><small>${M.variants[s.variant].range.join('–')} ${M.variants[s.variant].kind==='seconds'?'seconds':'reps'}${M.variants[s.variant].side?' per side':''} · ${setLabel(s.sets)}</small><p>${M.variants[s.variant].cue}</p></div>`).join('')}</section>`).join('')}<div class="card"><h2>Progress at your pace</h2><p>Begin with light loads. First improve control and comfortable range, then reps, then resistance. No automatic load suggestions.</p><p>Overhead options are seated or kneeling for your ceiling. Bosu balance options are optional. The ankle finish always works both sides.</p></div>`;app.querySelectorAll('[data-letter]').forEach(s=>s.onchange=()=>{state.choices[s.dataset.letter+s.dataset.slot]=s.value;persist();render();});}
 function renderProgress(){
  const h=state.history,week=thisWeek(),scores=h.filter(s=>Number.isFinite(s.before)&&Number.isFinite(s.after)),recent=scores.slice(-10),delta=recent.length?recent.reduce((sum,s)=>sum+s.before-s.after,0)/recent.length:null;
  app.innerHTML=`<span class="eyebrow">Consistency first</span><h1>Your practice, over time.</h1><div class="grid2"><div class="card"><div class="metric">${week.length} / 5</div><small>Sessions this week</small></div><div class="card"><div class="metric">${h.length}</div><small>Total sessions</small></div></div><div class="card"><h2>Stiffness</h2>${recent.length?`<p>Recent average change: <strong>${delta>0?delta.toFixed(1)+' points less stiff':delta<0?(-delta).toFixed(1)+' points more stiff':'unchanged'}</strong> immediately after a workout.</p><div class="trend" role="img" aria-label="Stiffness after each of your last ${recent.length} scored sessions">${recent.map(s=>`<div style="height:${Math.max(4,s.after*6)}px" title="${s.date}: ${s.after}/10 after"></div>`).join('')}</div><small>${recent.length} scored sessions. Immediate relief is different from a long-term trend.</small>`:'<p class="muted empty">Record stiffness before and after a few sessions to see your own pattern.</p>'}</div>
- ${wellnessProgress()}<div class="card"><h2>Exercise progress</h2><label for="history-variant">Exercise variation</label><select id="history-variant">${Object.entries(M.variants).map(([id,v])=>`<option value="${id}">${v.name}</option>`).join('')}</select><div id="exercise-history"></div></div><div class="card"><h2>Session history</h2>${h.length?h.slice(-20).reverse().map(s=>`<details class="record"><summary>${s.date} · ${s.letter}${s.short?' · shortened':''}</summary><p>${escape(s.peloton)} · ${s.logs.length} exercises<br>Stiffness: ${s.before??'—'} → ${s.after??'—'}<br>Feeling before: ${s.checkin?.feel??'—'}/5${s.checkin?.reasons?.length?' · '+s.checkin.reasons.map(escape).join(', '):''}<br>Right ankle: ${escape(s.ankle||'—')} · Back: ${escape(s.back||'—')}</p>${s.logs.map(l=>`<p><strong>${M.variants[l.variant].name}</strong><br>${setSummary(l)}<br><small>${escape(l.effort)}${l.pain?' · symptoms flagged':''}</small></p>`).join('')}</details>`).join(''):'<p class="muted empty">Your completed sessions will appear here.</p>'}</div>`;
+ ${wellnessProgress()}<div class="card"><h2>Exercise progress</h2><label for="history-variant">Exercise variation</label><select id="history-variant">${Object.entries(M.variants).map(([id,v])=>`<option value="${id}">${v.name}</option>`).join('')}</select><div id="exercise-history"></div></div><div class="card"><h2>Session history</h2>${h.length?h.slice(-20).reverse().map(s=>`<details class="record"><summary>${s.date} · ${s.letter}${s.short?' · shortened':''}</summary><p>${escape(s.peloton)} · ${s.logs.length} exercises<br>Stiffness: ${s.before??'—'} → ${s.after??'—'}<br>Feeling before: ${s.checkin?.feel??'—'}/5${s.checkin?.reasons?.length?' · '+s.checkin.reasons.map(escape).join(', '):''}<br>Right ankle: ${escape(s.ankle||'—')} · Back: ${escape(s.back||'—')}</p>${s.logs.map(l=>`<p><strong>${M.variants[l.variant]?M.variants[l.variant].name:l.variant}</strong><br>${setSummary(l)}<br><small>${escape(l.effort)}${l.pain?' · symptoms flagged':''}</small></p>`).join('')}</details>`).join(''):'<p class="muted empty">Your completed sessions will appear here.</p>'}</div>`;
  const select=$('#history-variant');const ids=h.flatMap(s=>s.logs.map(l=>l.variant));if(ids.length)select.value=ids.at(-1);select.onchange=()=>drawHistory(select.value);drawHistory(select.value);
 }
-function setSummary(l){const v=M.variants[l.variant];return l.sets.map(s=>`${v.body?'':v.band?escape(l.band)+' band · ':`${s.load+s.addon} lb${v.cable?` (${s.load} stack + ${s.addon} add-on)`:''} · `}${s.reps} ${v.kind==='seconds'?'sec':'reps'}${v.side?' / side':''}`).join('<br>');}
-function drawHistory(id){const logs=M.lastLogs(state.history,id),v=M.variants[id],s=M.suggest(state.history,id);$('#exercise-history').innerHTML=`<p class="suggestion">Next time: ${escape(s.reason)}</p>${logs.length?`<small>${v.unit}</small>${logs.slice(-8).reverse().map(l=>`<div class="record"><span class="tag">${escape(l.date)}</span><strong>${setSummary(l)}</strong><br><small>${escape(l.effort)}${l.pain?' · symptoms flagged':''}</small></div>`).join('')}`:'<p class="muted">No records for this variation yet.</p>'}`;}
-$('#backup').onclick=()=>{modal(`<h2>Your records</h2><p>Saved in this browser on this device. They do not automatically sync to your phone or the previous app.</p><p>Download a backup before changing devices or clearing browser data.</p><button id="export" class="primary">Download backup</button><label for="import">Restore a Mobility First backup</label><input id="import" type="file" accept="application/json,.json"><small>Restore replaces this version’s records after confirmation.</small><p><a href="https://everpropainting.github.io/mobility-first/previous.html">Open the previous app and its records</a></p><small>Use the same phone and browser where you used the previous app. Its records have not been imported into this rebuild.</small>${loadProblem?'<button id="export-raw" class="secondary" style="margin-top:16px">Download unreadable saved data</button>':''}`);
+function setSummary(l){const v=M.variants[l.variant];if(!v)return escape(JSON.stringify(l.sets));return l.sets.map(s=>`${v.body?'':v.band?escape(l.band)+' band · ':`${s.load+s.addon} lb${v.cable?` (${s.load} stack + ${s.addon} add-on)`:''} · `}${s.reps} ${v.kind==='seconds'?'sec':'reps'}${v.side?' / side':''}${s.feel?' · '+s.feel:''}`).join('<br>');}
+function drawHistory(id){const logs=M.lastLogs(state.history,id),v=M.variants[id];$('#exercise-history').innerHTML=`<p class="suggestion">Last time only — no suggested next weight.</p>${logs.length?`<small>${v.unit}</small>${logs.slice(-8).reverse().map(l=>`<div class="record"><span class="tag">${escape(l.date)}</span><strong>${setSummary(l)}</strong><br><small>${escape(l.effort)}${l.pain?' · symptoms flagged':''}</small></div>`).join('')}`:'<p class="muted">No records for this variation yet.</p>'}`;}
+$('#backup').onclick=()=>{modal(`<h2>Your records</h2><p>Saved in this browser on this device. They do not automatically sync to your phone or the previous app.</p><p><strong>Owner step before any production upgrade:</strong> on your iPhone Safari open the live app → Backup → Download backup. That device backup is not done from this preview.</p>${lastBackupKey?`<p class="notice">This browser also has a pre-migration copy: <code>${escape(lastBackupKey)}</code></p>`:''}<button id="export" class="primary">Download backup</button><label for="import">Restore a Mobility First backup</label><input id="import" type="file" accept="application/json,.json"><small>Restore replaces this version’s records after confirmation. v1 backups are migrated additively to v2.</small><p><a href="previous.html">Open the previous app and its records</a></p><small>Use the same phone and browser where you used the previous app. Its records have not been imported into this rebuild.</small>${loadProblem?'<button id="export-raw" class="secondary" style="margin-top:16px">Download unreadable saved data</button>':''}`);
  $('#export').onclick=()=>download(JSON.stringify(state,null,2),`mobility-first-${M.localDate()}.json`);
  if($('#export-raw'))$('#export-raw').onclick=()=>download(localStorage.getItem(KEY)||'','mobility-first-recovery.txt');
- $('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>10000000)throw Error('Backup is too large.');const data=M.validate(JSON.parse(await file.text()));if(confirm(`Restore ${data.history.length} sessions? This replaces your current records; download a backup first.`)){const old=state;state=data;if(!persist()){state=old;return;}loadProblem=false;editing=null;form=null;$('#modal').close();render();toast('Backup restored');}}catch(error){toast(error.message||'Could not read that backup.');}};
+ $('#import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>10000000)throw Error('Backup is too large.');let data=JSON.parse(await file.text());if(data.version===1){const stamp=new Date().toISOString().replace(/[:.]/g,'-');try{localStorage.setItem(`mobility_first_v2_backup_v1_${stamp}`,JSON.stringify(data));}catch(_){}data=M.migrate(data);}data=M.validate(data);if(confirm(`Restore ${data.history.length} sessions? This replaces your current records; download a backup first.`)){const old=state;state=data;if(!persist()){state=old;return;}loadProblem=false;editing=null;form=null;$('#modal').close();render();toast('Backup restored');}}catch(error){toast(error.message||'Could not read that backup.');}};
 };
 function download(text,name){const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 setInterval(()=>{const el=$('#elapsed');if(el)el.textContent=elapsed()+' min since starting';const sleeping=$('#sleep-elapsed');if(sleeping&&state.sleepActive)sleeping.textContent=sleepDuration(Math.max(0,(Date.now()-new Date(state.sleepActive.start))/3600000));},30000);
